@@ -1,0 +1,17 @@
+# Ignores a number of files and directories that are user-specific or unnecessary
+.idea/
+
+# Virtual environment
+venv/
+
+# PyInstaller stuff (for creating executables)
+PLT.spec
+hooks/
+dist/
+build/
+
+# Saved models and experiment reports
+logs/
+
+# Sphinx documentation stuff
+docs/build/

@@ -1,4 +1,4 @@
-# PLT - Python Preference Learning Toolbox
+# PLT - Preference Learning Toolbox
 
 > A toolbox for preference learning implemented in Python.
 

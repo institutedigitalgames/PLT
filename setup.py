@@ -31,6 +31,7 @@ setup(
                       'matplotlib',
                       'pandas',
                       'tensorflow',
-                      'scikit_learn'],
+                      'scikit_learn',
+                      'scipy'],
 
 )

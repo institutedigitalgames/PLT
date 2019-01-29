@@ -71,6 +71,7 @@ PLT has the following package dependencies:
 * pandas
 * tensorflow
 * scikit_learn
+* scipy
 
 These depenencies may be easily istalled via pip:
 

@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyPLT's documentation!
-=================================
+PLT Documentation
+=================
 
 Preference learning (PL) is a core area of machine learning that handles datasets with ordinal relations. As the
 number of generated data of ordinal nature such as ranks and subjective ratings is increasing, the importance and
@@ -32,6 +32,9 @@ The documentation for PLT consists of the following:
    :maxdepth: 1
 
    pyplt
+
+* `Tutorial: How To Set Up And Run An Experiment <http://plt.institutedigitalgames.com/docs/tutorial_experiment.html>`_
+* `Tutorial: How To Add An Algorithm Or Method <http://plt.institutedigitalgames.com/docs/tutorial_new_algorithm.html>`_
 
 Indices and tables
 ==================

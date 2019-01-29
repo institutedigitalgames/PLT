@@ -1,3 +1,5 @@
+.. _pyplt:
+
 API Reference
 =============
 

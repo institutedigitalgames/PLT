@@ -9,7 +9,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="pyplt",
-    version="0.1.1",
+    version="0.1.2",
     description="A toolbox for preference learning implemented in Python.",
     long_description=README,
     long_description_content_type="text/markdown",

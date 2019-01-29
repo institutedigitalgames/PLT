@@ -9,14 +9,13 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="pyplt",
-    version="0.1.0",
+    version="0.1.1",
     description="A toolbox for preference learning implemented in Python.",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/institutedigitalgames/PLT",
     author="Institute of Digital Games, University of Malta",
     author_email="plt.digitalgames@um.edu.mt",
-    license="GPLv3",
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
@@ -26,12 +25,13 @@ setup(
     ],
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
-    install_requires=['ttkthemes',
-                      'numpy',
-                      'matplotlib',
-                      'pandas',
-                      'tensorflow',
-                      'scikit_learn',
-                      'scipy'],
+    # python_requires='3.6',
+    install_requires=['ttkthemes==2.1.0',
+                      'numpy==1.14.2',
+                      'matplotlib==2.2.2',
+                      'pandas==0.22.0',
+                      'tensorflow==1.7.0',
+                      'scikit_learn==0.19.1',
+                      'scipy==1.0.1'],
 
 )

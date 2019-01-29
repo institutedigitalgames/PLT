@@ -54,6 +54,9 @@ exp.set_pl_algorithm(pl_algorithm)
 pl_evaluator = KFoldCrossValidation(k=3)
 exp.set_pl_evaluator(pl_evaluator)
 
+# run the experiment
+exp.run()
+
 # save the results
 t = time.time()
 exp.save_exp_log(t, path="my_results.csv")

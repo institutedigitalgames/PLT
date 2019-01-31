@@ -6,8 +6,6 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-from pyplt import __version__
-
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -28,7 +26,7 @@ author = 'Institute of Digital Games (University of Malta)'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = __version__
+release = '0.1.2'
 
 
 # -- General configuration ---------------------------------------------------

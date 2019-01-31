@@ -2,6 +2,8 @@
 
 > A toolbox for preference learning implemented in Python.
 
+![Image](http://plt.institutedigitalgames.com/img/plt_header_logo_final_transparent_2_small.png "PLT logo")
+
 Preference learning (PL) is a core area of machine learning that handles datasets with ordinal relations. As the
 number of generated data of ordinal nature such as ranks and subjective ratings is increasing, the importance and
 role of the PL field becomes central within machine learning research and practice.

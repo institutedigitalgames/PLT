@@ -6,6 +6,8 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+from pyplt import __version__
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -19,14 +21,14 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'PyPLT'
+project = 'PLT'
 copyright = '2018, Institute of Digital Games (University of Malta)'
 author = 'Institute of Digital Games (University of Malta)'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -102,7 +104,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyPLTdoc'
+htmlhelp_basename = 'PLTdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -129,7 +131,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PyPLT.tex', 'PyPLT Documentation',
+    (master_doc, 'PLT.tex', 'PLT Documentation',
      'Institute of Digital Games (University of Malta)', 'manual'),
 ]
 
@@ -139,7 +141,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pyplt', 'PyPLT Documentation',
+    (master_doc, 'pyplt', 'PLT Documentation',
      [author], 1)
 ]
 
@@ -150,8 +152,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PyPLT', 'PyPLT Documentation',
-     author, 'PyPLT', 'One line description of project.',
+    (master_doc, 'PLT', 'PLT Documentation',
+     author, 'PLT', 'One line description of project.',
      'Miscellaneous'),
 ]
 

@@ -595,7 +595,8 @@ class ResultsWindow(tk.Toplevel):
 
     def _on_close_safe(self):
         """Safely close the window by making sure to call :meth:`self._unbind_mousewheel()` before unstacking."""
-        self._pl_algo.clean_up()  # do any final clean ups required by the pl algorithm class
+        # self._pl_algo.clean_up() # do any final clean ups required by the pl algorithm class
+        # ^ now handled by Experiment.run()
         self._unbind_mousewheel(None)
         ws.on_close(self, self._parent_window)
 

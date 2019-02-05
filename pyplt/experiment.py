@@ -679,6 +679,8 @@ class Experiment:
                 train_acc = self._pl_algo.calc_train_accuracy(train_objects, train_ranks, use_feats=self._features,
                                                               progress_window=progress_window,
                                                               exec_stopper=exec_stopper)
+                # finally, do any final clean ups required by the pl algorithm class
+                self._pl_algo.clean_up()
                 if train_acc is None:  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return
@@ -743,6 +745,8 @@ class Experiment:
                 test_acc = self._pl_algo.test(test_objects, test_ranks,
                                               use_feats=self._features,
                                               progress_window=progress_window, exec_stopper=exec_stopper)
+                # finally, do any final clean ups required by the pl algorithm class
+                self._pl_algo.clean_up()
                 if (train_acc is None) or (test_acc is None):  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return

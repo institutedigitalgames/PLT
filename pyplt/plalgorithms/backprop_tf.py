@@ -141,6 +141,13 @@ class BackpropagationTF(PLAlgorithm):
 
         # start with a whole new graph (delete any previous tf.Variables, etc.)
         self._graph = tf.Graph()  # reset the graph - equivalent to tf.reset_default_graph()
+        # first, close any existing session, if applicable
+        # unless already handled by Experiment.run()
+        if self._session is not None:
+            still_open = not self._session._closed
+            print("Is tf.Session still open? " + str(still_open))
+            if still_open:
+                self.clean_up()
         print("Opening tf.Session...")
         self._session = tf.Session(graph=self._graph)
         print("Done.")

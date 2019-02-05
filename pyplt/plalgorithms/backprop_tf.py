@@ -698,10 +698,11 @@ class BackpropagationTF(PLAlgorithm):
         V.IMP. THIS FUNCTION MUST BE CALLED WHEN THE CLASS INSTANCE IS NO LONGER IN USE unless a context manager
         is used around the BackpropagationTF class instance!!!
         """
-        print("Closing tf.Session...")
-        self._session.close()  # v.imp to close tf.Session whether manually or via context manager (see documentation)!!
-        print("Done.")
-        # pass
+        # v.imp to close tf.Session whether manually or via context manager (see documentation)!!
+        if self._session is not None:
+            print("Closing tf.Session...")
+            self._session.close()
+            print("Done.")
 
     # makes the class require a context manager like tensorflow so that session is always closed at the end:
     # if using context manager do something similar to

@@ -25,4 +25,4 @@ ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # print("root path:")
 # print(ROOT_PATH)
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"

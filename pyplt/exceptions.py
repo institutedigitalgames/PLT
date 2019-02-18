@@ -401,3 +401,26 @@ class MissingManualFoldsException(PLTException):
                   "To specify folds manually, use the 'Load Fold IDs' button in the KFCV menu to upload the " \
                   "necessary file."
         PLTException.__init__(self, summary, message, suppress)
+
+
+class AutoencoderNormalizationValueError(PLTException):
+    """Exception for when the normalization prior to use of autoencoder fails due to some non-numeric values.
+
+    Extends :class:`pyplt.exceptions.PLTException`.
+    """
+
+    def __init__(self, norm_method, suppress=False):
+        """Set the exception details.
+
+        :param norm_method: the attempted normalization method.
+        :type norm_method: :class:`pyplt.util.enums.NormalizationType`
+        :param suppress: specifies whether (False) or not (True) to call the constructor of parent
+            class :class:`Exception` (default False).
+        :type suppress: bool
+        """
+        summary = "Feature extraction via autoencoder failed."
+        message = "The dataset could not be " + str(norm_method.name) + \
+                  "-normalized for feature extraction via the autoencoder as some values in the dataset are not " \
+                  "entirely numeric (i.e., they could not be converted to float or int)."
+
+        PLTException.__init__(self, summary, message, suppress)

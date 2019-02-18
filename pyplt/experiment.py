@@ -28,7 +28,7 @@ from pyplt.evaluation.cross_validation import KFoldCrossValidation, Preprocessed
 from pyplt.evaluation.holdout import HoldOut
 from pyplt.exceptions import ObjectsFirstException, RanksFormatException, IDsException, NormalizationValueError, \
     ObjectIDsFormatException, NonNumericFeatureException, NoFeaturesError, NoRanksDerivedError, \
-    InvalidParameterValueException, IncompatibleFoldIndicesException
+    InvalidParameterValueException, IncompatibleFoldIndicesException, AutoencoderNormalizationValueError
 from pyplt.gui.util import text
 from pyplt.util.enums import FileType, NormalizationType, EvaluatorType
 
@@ -57,6 +57,7 @@ class Experiment:
     _norm_settings = dict()
     _shuffle = None
     _random_seed = None
+    _autoencoder = None
 
     # Feature Selection
     _fs_method = None
@@ -378,6 +379,14 @@ class Experiment:
         if memory is not None:
             self._memory = memory
 
+    def set_autoencoder(self, autoencoder):
+        """Set the autoencoder algorithm to be used to extract features from the dataset in the experiment.
+
+        :param autoencoder: the given autoencoder algorithm.
+        :type autoencoder: `pyplt.autoencoder.Autoencoder` or None
+        """
+        self._autoencoder = autoencoder
+
     def run(self, shuffle=False, random_state=None, debug=False, progress_window=None, exec_stopper=None):
         """Run the the experiment: feature selection first (if applicable), then preference learning.
 
@@ -432,6 +441,8 @@ class Experiment:
             to int or float prior to the normalization.
         :raises IncompatibleFoldIndicesException: if the amount of user-specified fold indices for cross validation
             does not match the amount of samples in the dataset.
+        :raises AutoencoderNormalizationValueError: if normalization prior to feature extraction via autoencoder
+            fails due to the presence of non-numeric values in the dataset.
         """
         self._shuffle = shuffle
         self._random_seed = random_state
@@ -509,9 +520,9 @@ class Experiment:
         self._start_time = datetime.datetime.now(tz=datetime.timezone.utc)
         print("STARTED AT " + str(self._start_time))
 
-        # Step E. Prepare dataset
+        # Step D. Prepare dataset
 
-        # E0a. Optionally, shuffle the data (before splitting the folds!)
+        # D0a. Optionally, shuffle the data (before splitting the folds!)
         # in the case of single file format, shuffle the samples
         # in the case of dual file format, shuffle the ranks only
         # also reset index (N.B. this replaces ID column which had already been made the new index)!
@@ -533,13 +544,55 @@ class Experiment:
             print(self._data)
             print(self._ranks)
 
-        # E0b. group everything up into single data variable
+        # E0b. data compression / feature extraction via autoencoder
+        if self._autoencoder is not None:
+            if self._is_dual_format:  # dual file format
+                samples = self._objects.copy(deep=True).values
+            else:  # single file format
+                samples = self._data.iloc[:, :-1].copy(deep=True).values  # all columns but last
+
+            # first, make sure data is normalized to the range [0..1]
+            try:
+                scaler = skpp.MinMaxScaler(feature_range=(0, 1), copy=True)
+                samples = scaler.fit_transform(samples)
+            except (ValueError, TypeError):
+                # value=str(str(ve.args[0]).split("\'")[1])
+                raise AutoencoderNormalizationValueError(norm_method=NormalizationType.MIN_MAX)
+
+            # train encoder
+            self._autoencoder.train(samples)
+
+            # encode samples
+            encoded_samples = np.array(self._autoencoder.encode(samples))
+            print("encoded_samples")
+            print(encoded_samples)
+            n_new_feats = encoded_samples.shape[1]  # n_cols
+            new_cols = ["F" + str(n) for n in range(n_new_feats)]
+
+            if self._is_dual_format:  # dual file format
+                old_index = self._objects.index
+                # print("old_index")
+                # print(old_index)
+                self._objects = pd.DataFrame(encoded_samples, index=old_index, columns=new_cols)
+                self._features = list(self._objects.columns)
+            else:  # single file format
+                old_index = self._data.index
+                ratings_ = self._data.iloc[:, -1]
+                ratings_col_label = self._data.columns[-1]
+                self._data = pd.DataFrame(encoded_samples, index=old_index, columns=new_cols)
+                self._data.insert(n_new_feats, ratings_col_label, ratings_, allow_duplicates=True)
+                self._features = list(self._data.columns[:-1])  # all except last column (ratings)!
+
+            # do final clean up (close tf.Session)
+            self._autoencoder.clean_up()
+
+        # D0c. group everything up into single data variable
         if not self._is_dual_format:  # single file format
             data = self._data
         else:  # dual file format
             data = self._objects, self._ranks
 
-        # E1. Split CV folds and start looping through each! (or use threads!)
+        # D1. Split CV folds and start looping through each! (or use threads!)
 
         # first make sure that manual folds (if applicable) match dataset in size
         # remember, if the single file format is used, the indices should correspond to objects/samples
@@ -554,7 +607,7 @@ class Experiment:
                         if len(eval_._test_folds) != len(self._ranks):
                             raise IncompatibleFoldIndicesException
 
-        # E1a. Split folds for FS
+        # D1a. Split folds for FS
         fs_folds_ready = False
         # pl_folds_ready = False
         if isinstance(self._fs_eval, KFoldCrossValidation) or isinstance(self._fs_eval, HoldOut):  # create folds for FS
@@ -571,7 +624,7 @@ class Experiment:
                 fs_folds = [(np.arange(self._ranks.shape[0]), None)]  # train set includes all rank indices, no test set
                 # ^ not self._ranks.index.values because that might require loc not iloc!
 
-        # E1b. split folds for PL
+        # D1b. split folds for PL
         if isinstance(self._pl_eval, KFoldCrossValidation) or isinstance(self._pl_eval, HoldOut):
             if fs_folds_ready:  # copy folds from FS
                 pl_folds = fs_folds

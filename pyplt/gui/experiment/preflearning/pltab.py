@@ -31,7 +31,8 @@ from pyplt.gui.util import colours, supported_methods
 from pyplt.gui.util.tab_locking import LockableTab
 from pyplt.evaluation.holdout import HoldOut
 from pyplt.exceptions import NoFeaturesError, InvalidParameterValueException, NoRanksDerivedError, \
-    NormalizationValueError, IncompatibleFoldIndicesException, MissingManualFoldsException
+    NormalizationValueError, IncompatibleFoldIndicesException, MissingManualFoldsException, \
+    AutoencoderNormalizationValueError
 from pyplt.experiment import Experiment
 from pyplt.fsmethods.sfs import SFS
 from pyplt.plalgorithms.backprop_tf import BackpropagationTF
@@ -748,7 +749,7 @@ class PLFrame(tk.Frame):
             pw.put(ex.__class__.__name__)  # let progress window know of the error so it can abort properly
             return  # terminate experiment thread by returning
         except (NoFeaturesError, NoRanksDerivedError, InvalidParameterValueException, NormalizationValueError,
-                IncompatibleFoldIndicesException) as ex:
+                IncompatibleFoldIndicesException, AutoencoderNormalizationValueError) as ex:
             pw.put(str(ex.__class__.__name__) + "??" + ex.get_summary() + "??" + ex.get_message())
             # ^ let progress window know of the error so it can abort properly
             return  # terminate experiment thread by returning

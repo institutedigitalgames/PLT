@@ -200,7 +200,7 @@ class ProgressWindow(tk.Toplevel):
                 line = self._queue.get_nowait()
                 if ("NoFeaturesError" in line) or ("NoRanksDerivedError" in line) or \
                         ("InvalidParameterValueException" in line) or ("NormalizationValueError" in line) or \
-                        ("IncompatibleFoldIndicesException" in line):
+                        ("IncompatibleFoldIndicesException" in line) or ("AutoencoderNormalizationValueError" in line):
                     error = str(line).split("??")
                     # error_name = error[0]
                     error_summary = error[1]

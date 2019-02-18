@@ -143,19 +143,19 @@ class PreProcessingFrame(tk.Frame):
     Extends the class `tkinter.Frame`.
     """
 
-    _preview_canvas = None
-    _preview_frame = None
+    _settings_canvas = None
+    _settings_frame = None
 
     def _on_canvas_config(self, event):
         """Update the canvas `scrollregion` to account for its entire bounding box.
 
-        This method is bound to all <Configure> events with respect to :attr:`self._preview_frame`.
+        This method is bound to all <Configure> events with respect to :attr:`self._settings_frame`.
 
         :param event: the <Configure> event that triggered the method call.
         :type event: `tkinter Event`
         """
         # print("__ on_config called __")
-        self._preview_canvas.configure(scrollregion=self._preview_canvas.bbox("all"))
+        self._settings_canvas.configure(scrollregion=self._settings_canvas.bbox("all"))
 
     def __init__(self, parent, parent_window, files_tab):
         """Initializes the frame widget.
@@ -291,8 +291,8 @@ class PreProcessingFrame(tk.Frame):
         self._features = None
         self._include_settings = {}
         self._norm_settings = {}
-        self._preview_frame = None
-        self._preview_canvas = None
+        self._settings_frame = None
+        self._settings_canvas = None
         # destroy any remaining children e.g. scrollbars!
         for child in self._settings_pane.winfo_children():
             child.destroy()
@@ -300,7 +300,7 @@ class PreProcessingFrame(tk.Frame):
     def init_tab(self):
         """Initialize (or re-initialize) the contents of the tab."""
         # print("init_tab called (preproc tab)")
-        if self._preview_canvas is None:
+        if self._settings_canvas is None:
             data = self._files_tab.get_data()
             if isinstance(data, tuple):
                 self._data = data[0].copy()  # objects only
@@ -309,51 +309,51 @@ class PreProcessingFrame(tk.Frame):
                 self._data = self._data.iloc[:, :-1]  # ignore the ratings column!
             self._features = self._data.columns
 
-            self._preview_canvas = tk.Canvas(self._settings_pane, bg=colours.CANVAS_BACK)
-            self._preview_canvas.bind('<Enter>', self._bind_mousewheel)
-            self._preview_canvas.bind('<Leave>', self._unbind_mousewheel)
+            self._settings_canvas = tk.Canvas(self._settings_pane, bg=colours.CANVAS_BACK)
+            self._settings_canvas.bind('<Enter>', self._bind_mousewheel)
+            self._settings_canvas.bind('<Leave>', self._unbind_mousewheel)
 
             # set scrollbars
-            v_scroll = ttk.Scrollbar(self._settings_pane, orient="vertical", command=self._preview_canvas.yview,
+            v_scroll = ttk.Scrollbar(self._settings_pane, orient="vertical", command=self._settings_canvas.yview,
                                      style="Yellow.PLT.Vertical.TScrollbar")
             v_scroll.pack(side='right', fill='y')
-            self._preview_canvas.configure(yscrollcommand=v_scroll.set)
-            h_scroll = ttk.Scrollbar(self._settings_pane, orient="horizontal", command=self._preview_canvas.xview,
+            self._settings_canvas.configure(yscrollcommand=v_scroll.set)
+            h_scroll = ttk.Scrollbar(self._settings_pane, orient="horizontal", command=self._settings_canvas.xview,
                                      style="Yellow.PLT.Horizontal.TScrollbar")
             h_scroll.pack(side='bottom', fill='x')
-            self._preview_canvas.configure(xscrollcommand=h_scroll.set)
+            self._settings_canvas.configure(xscrollcommand=h_scroll.set)
 
             self._redraw_settings(self._features)
 
-            self._preview_canvas.pack(side='left', expand=True, fill=tk.BOTH)
+            self._settings_canvas.pack(side='left', expand=True, fill=tk.BOTH)
 
     def _bind_mousewheel(self, event):
         """Bind all mouse wheel events with respect to the canvas to a canvas-scrolling function.
 
-        This method is called whenever an <Enter> event occurs with respect to :attr:`self._preview_canvas`.
+        This method is called whenever an <Enter> event occurs with respect to :attr:`self._settings_canvas`.
 
         :param event: the <Enter> event that triggered the method call.
         :type event: `tkinter Event`
         """
         # for Windows OS and MacOS
-        self._preview_canvas.bind_all("<MouseWheel>", self._on_mouse_scroll)
+        self._settings_canvas.bind_all("<MouseWheel>", self._on_mouse_scroll)
         # for Linux OS
-        self._preview_canvas.bind_all("<Button-4>", self._on_mouse_scroll)
-        self._preview_canvas.bind_all("<Button-5>", self._on_mouse_scroll)
+        self._settings_canvas.bind_all("<Button-4>", self._on_mouse_scroll)
+        self._settings_canvas.bind_all("<Button-5>", self._on_mouse_scroll)
 
     def _unbind_mousewheel(self, event):
         """Unbind all mouse wheel events with respect to the canvas from any function.
 
-        This method is called whenever a <Leave> event occurs with respect to :attr:`self._preview_canvas`.
+        This method is called whenever a <Leave> event occurs with respect to :attr:`self._settings_canvas`.
 
         :param event: the <Leave> event that triggered the method call.
         :type event: `tkinter Event`
         """
         # for Windows OS and MacOS
-        self._preview_canvas.unbind_all("<MouseWheel>")
+        self._settings_canvas.unbind_all("<MouseWheel>")
         # for Linux OS
-        self._preview_canvas.unbind_all("<Button-4>")
-        self._preview_canvas.unbind_all("<Button-5>")
+        self._settings_canvas.unbind_all("<Button-4>")
+        self._settings_canvas.unbind_all("<Button-5>")
 
     def _on_mouse_scroll(self, event):
         """Vertically scroll through the canvas by an amount derived from the given <MouseWheel> event.
@@ -364,11 +364,11 @@ class PreProcessingFrame(tk.Frame):
         # print("Scrolling PRE-PROCESSING TAB.............................")
         if self._OS == 'Linux':
             if event.num == 4:
-                self._preview_canvas.yview_scroll(-1, "units")
+                self._settings_canvas.yview_scroll(-1, "units")
             elif event.num == 5:
-                self._preview_canvas.yview_scroll(1, "units")
+                self._settings_canvas.yview_scroll(1, "units")
         else:
-            self._preview_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            self._settings_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _redraw_settings(self, features):
         """Draw the GUI area containing the include/exclude and normalization settings for each of the given features.
@@ -392,23 +392,23 @@ class PreProcessingFrame(tk.Frame):
             # n.b. can then go back to enum via NormalizationType[given str name]
 
         # Destroy old stuff first
-        if self._preview_frame is not None:
+        if self._settings_frame is not None:
             # print("Destroying frame and canvas...")
-            self._preview_frame.destroy()
-            self._preview_canvas.delete("all")
+            self._settings_frame.destroy()
+            self._settings_canvas.delete("all")
 
         # Now redraw
-        self._preview_frame = tk.Frame(self._preview_canvas, relief='groove', bg=colours.CANVAS_BACK)
+        self._settings_frame = tk.Frame(self._settings_canvas, relief='groove', bg=colours.CANVAS_BACK)
 
-        self._preview_frame.bind('<Configure>', self._on_canvas_config)
+        self._settings_frame.bind('<Configure>', self._on_canvas_config)
 
-        self._preview_canvas.create_window((0, 0), window=self._preview_frame, anchor='nw')
+        self._settings_canvas.create_window((0, 0), window=self._settings_frame, anchor='nw')
 
         r = 0
         cn = 0
         columns = ['Include?', 'Feature', 'Normalization']
         for col_name in columns:
-            item = tk.Label(self._preview_frame, text=col_name, background=colours.PREVIEW_DEFAULT, fg='white',
+            item = tk.Label(self._settings_frame, text=col_name, background=colours.PREVIEW_DEFAULT, fg='white',
                             borderwidth=2, relief='raised')
             if len(str(col_name)) < 10:
                 item.configure(width=10)
@@ -422,18 +422,18 @@ class PreProcessingFrame(tk.Frame):
                 checkbtn = None
                 optmenu = None
                 if col == 'Include?':
-                    item = tk.Frame(self._preview_frame, borderwidth=1, relief='groove')
+                    item = tk.Frame(self._settings_frame, borderwidth=1, relief='groove')
                     checkbtn = ttk.Checkbutton(item, variable=self._include_settings[feat], onvalue=True,
                                                offvalue=False)
                     checkbtn.pack()
                     # item.invoke()  # True by default
                 elif col == 'Feature':
-                    item = tk.Label(self._preview_frame, text=str(feat), borderwidth=1, relief='groove')
+                    item = tk.Label(self._settings_frame, text=str(feat), borderwidth=1, relief='groove')
                 else:
                     options = [NormalizationType.NONE.name,
                                NormalizationType.MIN_MAX.name,
                                NormalizationType.Z_SCORE.name]
-                    item = tk.Frame(self._preview_frame, borderwidth=1, relief='groove')
+                    item = tk.Frame(self._settings_frame, borderwidth=1, relief='groove')
                     optmenu = ttk.OptionMenu(item, self._norm_settings[feat], options[0], *options)
                     optmenu.pack(fill=tk.BOTH, expand=True)
                 if r % 2 == 0:
@@ -454,7 +454,7 @@ class PreProcessingFrame(tk.Frame):
             f += 1
 
         for c in range(len(columns)):
-            self._preview_frame.grid_columnconfigure(c, weight=1, uniform=columns[c])
+            self._settings_frame.grid_columnconfigure(c, weight=1, uniform=columns[c])
 
     def get_include_settings(self):
         """Get the current include/exclude settings for each feature in the original objects data.

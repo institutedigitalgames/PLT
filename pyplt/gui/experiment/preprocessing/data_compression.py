@@ -72,7 +72,7 @@ class AutoencoderSettings(tk.Frame):
         ann_frame.grid(row=0, column=0, sticky='nsew', pady=(0, 5))
 
         # Main title
-        ann_title = tk.Label(ann_frame, text="ANN Topology Parameters", bg=colours.PL_INNER,
+        ann_title = tk.Label(ann_frame, text="Autoencoder ANN Topology Parameters", bg=colours.PL_INNER,
                              font=font.Font(family='Ebrima', size=12))
         ann_title.pack(side=tk.TOP)
 
@@ -244,7 +244,7 @@ class AutoencoderSettings(tk.Frame):
         bp_frame = tk.Frame(self, bd=2, relief=tk.GROOVE, padx=15, pady=15, bg=colours.PL_INNER)
         bp_frame.grid(row=1, column=0, sticky='nsew')
 
-        bp_title = tk.Label(bp_frame, text="Backpropagation Parameters", bg=colours.PL_INNER,
+        bp_title = tk.Label(bp_frame, text="Autoencoder Backpropagation Parameters", bg=colours.PL_INNER,
                             font=font.Font(family='Ebrima', size=12))
         bp_title.pack(side=tk.TOP, pady=(0, 10))
 
@@ -363,7 +363,8 @@ class AutoencoderSettings(tk.Frame):
         self._num_total_hidden_layers += 1
 
         self.update_idletasks()
-        self._on_resize_fn(None)
+        if self._on_resize_fn is not None:
+            self._on_resize_fn(None)
 
     def _del_hidden_layer(self, part):
         """Remove the last hidden layer entry from the network topology area of the GUI menu.
@@ -409,7 +410,8 @@ class AutoencoderSettings(tk.Frame):
             self._num_total_hidden_layers -= 1
 
         self.update_idletasks()
-        self._on_resize_fn(None)
+        if self._on_resize_fn is not None:
+            self._on_resize_fn(None)
 
     def _update_labels(self):
         for position, label in self._decoder_labels.items():

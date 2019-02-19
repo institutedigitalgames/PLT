@@ -21,6 +21,7 @@ import tkinter as tk
 from tkinter import ttk, font, messagebox
 import os
 
+from pyplt.gui.experiment.preprocessing.data_compression import AutoencoderSettings
 from pyplt.gui.util import colours
 from pyplt.gui.experiment.dataset.preview import DataSetPreviewFrame
 from pyplt.gui.util.tab_locking import LockableTab
@@ -145,8 +146,9 @@ class PreProcessingFrame(tk.Frame):
 
     _settings_canvas = None
     _settings_frame = None
+    _autoencoder_menu = None
 
-    def _on_canvas_config(self, event):
+    def _on_settings_canvas_config(self, event):
         """Update the canvas `scrollregion` to account for its entire bounding box.
 
         This method is bound to all <Configure> events with respect to :attr:`self._settings_frame`.
@@ -156,6 +158,18 @@ class PreProcessingFrame(tk.Frame):
         """
         # print("__ on_config called __")
         self._settings_canvas.configure(scrollregion=self._settings_canvas.bbox("all"))
+
+    def _on_main_canvas_config(self, event):
+        """Update the canvas `scrollregion` to account for the entire area of the :attr:`self._main_sub_frame` widget.
+
+        This method is bound to all <Configure> events with respect to :attr:`self._main_sub_frame`.
+
+        :param event: the <Configure> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # print("__ on_config called __")
+        self._main_canvas.configure(scrollregion=(0, 0, self._main_sub_frame.winfo_reqwidth(),
+                                                  self._main_sub_frame.winfo_reqheight()))
 
     def __init__(self, parent, parent_window, files_tab):
         """Initializes the frame widget.
@@ -183,16 +197,51 @@ class PreProcessingFrame(tk.Frame):
         self._shuffle = tk.BooleanVar(value=False)
         self._random_seed = tk.StringVar(value="")
 
+        self._settings_v_scroll = None
+
         self._OS = platform.system()
 
         tk.Frame.__init__(self, parent)
 
-        main_frame = tk.Frame(self)
-        main_frame.pack()
+        self._main_canvas = tk.Canvas(self)
+        self._main_canvas.bind("<Configure>", self._on_resize)
+        self._main_canvas.bind('<Enter>', self._bind_mousewheel)
+        self._main_canvas.bind('<Leave>', self._unbind_mousewheel)
+        self._canvas_height = self._main_canvas.winfo_reqheight()
+        self._canvas_width = self._main_canvas.winfo_reqwidth()
+        self._main_sub_frame = tk.Frame(self._main_canvas)
+        self._main_sub_sub_frame = tk.Frame(self._main_sub_frame)
 
-        self._settings_area = tk.Frame(main_frame, bd=2, relief='groove', bg=colours.PREPROC_BACK)
+        # menu for choosing between manual and automatic feature selection
+        self._features_area = tk.Frame(self._main_sub_sub_frame)
+        self._features_area.grid(row=0, column=0, pady=(20, 15), sticky='ew')
+
+        extract_frame = tk.Frame(self._features_area, padx=25)
+        extract_frame.grid(row=0, column=1)
+
+        self._extract = tk.BooleanVar()
+        self._extract.set(False)  # false by default
+
+        extract_label = tk.Label(extract_frame, text="Feature Extraction")
+        extract_label.grid(row=0, column=0, sticky='w')
+        extract_manual = ttk.Radiobutton(extract_frame, variable=self._extract,
+                                         # Use the columns in the dataset as features
+                                         # Use the pre-extracted features included in the dataset
+                                         text="Use the features included in the dataset",
+                                         value=False,
+                                         command=self._toggle_autoencoder_menu,
+                                         style='PLT.TRadiobutton')
+        extract_manual.grid(row=1, column=0, sticky='w')
+        extract_auto = ttk.Radiobutton(extract_frame, variable=self._extract,
+                                       text="Extract features automatically (via an autoencoder)",
+                                       value=True,
+                                       command=self._toggle_autoencoder_menu,
+                                       style='PLT.TRadiobutton')
+        extract_auto.grid(row=2, column=0, sticky='w')
+
+        self._settings_area = tk.Frame(self._main_sub_sub_frame, bd=2, relief='groove', bg=colours.PREPROC_BACK)
         # self._settings_area.grid(row=0, column=0, sticky='nsew', padx=(20, 10), pady=20)
-        self._settings_area.grid(row=0, column=0, pady=(20, 5), sticky='ew')  # , fill=tk.BOTH, expand=True
+        self._settings_area.grid(row=2, column=0, pady=(10, 5), sticky='ew')  # , fill=tk.BOTH, expand=True
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=2)
@@ -225,8 +274,9 @@ class PreProcessingFrame(tk.Frame):
                                             style='Blue.PLT.TMenubutton')
         normalize_all_menu.grid(row=0, column=1)
 
-        shuffle_menu = tk.Frame(main_frame, bd=2, relief='groove', bg=colours.PREPROC_BACK, padx=15, pady=5)
-        shuffle_menu.grid(row=1, column=0, pady=(5, 20), sticky='ew')
+        shuffle_menu = tk.Frame(self._main_sub_sub_frame, bd=2, relief='groove', bg=colours.PREPROC_BACK,
+                                padx=15, pady=5)
+        shuffle_menu.grid(row=3, column=0, pady=(5, 20), sticky='ew')
 
         # tk.Label(shuffle_menu, text="Shuffle Dataset?", font=font.Font(family='Ebrima', size=12),
         #          bg=colours.PREPROC_BACK).pack(pady=5)
@@ -248,15 +298,59 @@ class PreProcessingFrame(tk.Frame):
                           validate="all", validatecommand=self._vcmd + (ParamType.INT.name,), style='PL.PLT.TEntry')
         entry.grid(row=0, column=1, pady=5)
 
-        self.grid_columnconfigure(0, weight=1)  # make settings_area and shuffle_menu equal in width
+        # self.grid_columnconfigure(0, weight=1)  # make settings_area and shuffle_menu equal in width
+
+        # add scrollbars
+
+        v_scroll = ttk.Scrollbar(self, orient="vertical", command=self._main_canvas.yview,
+                                 style="PLT.Vertical.TScrollbar")
+        v_scroll.pack(side='right', fill='y')
+        self._main_canvas.configure(yscrollcommand=v_scroll.set)
+        h_scroll = ttk.Scrollbar(self, orient="horizontal", command=self._main_canvas.xview,
+                                 style="PLT.Horizontal.TScrollbar")
+        h_scroll.pack(side='bottom', fill='x')
+        self._main_canvas.configure(xscrollcommand=h_scroll.set)
+
+        # pack everything
+        self._main_sub_sub_frame.pack()
+        self._main_sub_frame.pack(fill=tk.BOTH, expand=True)  # useless line... doesn't work here it seems
+        self._main_canvas.pack(side='left', expand=True, fill=tk.BOTH)
+
+        self.c_win = self._main_canvas.create_window((0, 0), window=self._main_sub_frame, anchor='nw')
+        self._main_canvas.config(scrollregion=self._main_canvas.bbox("all"))
+
+        self._main_sub_frame.bind('<Configure>', self._on_main_canvas_config)
+
+        # self._main_sub_sub_frame.grid_rowconfigure(0, weight=0)
+        # self._main_sub_sub_frame.grid_rowconfigure(1, weight=1)
+        # self._main_sub_sub_frame.grid_rowconfigure(2, weight=0)
+
+    def _toggle_autoencoder_menu(self):
+        """Show or hide autoencoder menu for feature extraction."""
+        if self._extract.get():
+            if self._autoencoder_menu is None:
+                self._autoencoder_menu = AutoencoderSettings(self._main_sub_sub_frame, len(self._features)-1,
+                                                             self._on_resize)
+                # ^ -1 to exclude ID column
+                self._autoencoder_menu.grid(row=1, column=0, sticky='ns')
+            else:
+                self._autoencoder_menu.grid(row=1, column=0, sticky='ns')
+            # force updates for canvas and scrollbar stuff
+            self.update_idletasks()
+            self._on_resize(None)
+            self._on_main_canvas_config(None)
+        else:
+            if self._autoencoder_menu is not None:
+                self._autoencoder_menu.grid_forget()
 
     def _toggle_seed_menu(self):
         """Show or hide shuffle submenu for inputting random seed parameter."""
         if self._shuffle.get():
             self._seed_menu.pack()
-            # # make it appear properly
-            # self.update_idletasks()
-            # self._on_resize_fn(None)
+            # force updates for canvas and scrollbar stuff
+            self.update_idletasks()
+            self._on_resize(None)
+            self._on_main_canvas_config(None)
         else:
             self._seed_menu.pack_forget()
 
@@ -310,14 +404,15 @@ class PreProcessingFrame(tk.Frame):
             self._features = self._data.columns
 
             self._settings_canvas = tk.Canvas(self._settings_pane, bg=colours.CANVAS_BACK)
-            self._settings_canvas.bind('<Enter>', self._bind_mousewheel)
-            self._settings_canvas.bind('<Leave>', self._unbind_mousewheel)
+            # self._settings_canvas.bind('<Enter>', self._bind_mousewheel_settings)
+            # self._settings_canvas.bind('<Leave>', self._unbind_mousewheel_settings)
 
             # set scrollbars
-            v_scroll = ttk.Scrollbar(self._settings_pane, orient="vertical", command=self._settings_canvas.yview,
-                                     style="Yellow.PLT.Vertical.TScrollbar")
-            v_scroll.pack(side='right', fill='y')
-            self._settings_canvas.configure(yscrollcommand=v_scroll.set)
+            self._settings_v_scroll = ttk.Scrollbar(self._settings_pane, orient="vertical",
+                                                    command=self._settings_canvas.yview,
+                                                    style="Yellow.PLT.Vertical.TScrollbar")
+            self._settings_v_scroll.pack(side='right', fill='y')
+            self._settings_canvas.configure(yscrollcommand=self._settings_v_scroll.set)
             h_scroll = ttk.Scrollbar(self._settings_pane, orient="horizontal", command=self._settings_canvas.xview,
                                      style="Yellow.PLT.Horizontal.TScrollbar")
             h_scroll.pack(side='bottom', fill='x')
@@ -327,48 +422,10 @@ class PreProcessingFrame(tk.Frame):
 
             self._settings_canvas.pack(side='left', expand=True, fill=tk.BOTH)
 
-    def _bind_mousewheel(self, event):
-        """Bind all mouse wheel events with respect to the canvas to a canvas-scrolling function.
-
-        This method is called whenever an <Enter> event occurs with respect to :attr:`self._settings_canvas`.
-
-        :param event: the <Enter> event that triggered the method call.
-        :type event: `tkinter Event`
-        """
-        # for Windows OS and MacOS
-        self._settings_canvas.bind_all("<MouseWheel>", self._on_mouse_scroll)
-        # for Linux OS
-        self._settings_canvas.bind_all("<Button-4>", self._on_mouse_scroll)
-        self._settings_canvas.bind_all("<Button-5>", self._on_mouse_scroll)
-
-    def _unbind_mousewheel(self, event):
-        """Unbind all mouse wheel events with respect to the canvas from any function.
-
-        This method is called whenever a <Leave> event occurs with respect to :attr:`self._settings_canvas`.
-
-        :param event: the <Leave> event that triggered the method call.
-        :type event: `tkinter Event`
-        """
-        # for Windows OS and MacOS
-        self._settings_canvas.unbind_all("<MouseWheel>")
-        # for Linux OS
-        self._settings_canvas.unbind_all("<Button-4>")
-        self._settings_canvas.unbind_all("<Button-5>")
-
-    def _on_mouse_scroll(self, event):
-        """Vertically scroll through the canvas by an amount derived from the given <MouseWheel> event.
-
-        :param event: the <MouseWheel> event that triggered the method call.
-        :type event: `tkinter Event`
-        """
-        # print("Scrolling PRE-PROCESSING TAB.............................")
-        if self._OS == 'Linux':
-            if event.num == 4:
-                self._settings_canvas.yview_scroll(-1, "units")
-            elif event.num == 5:
-                self._settings_canvas.yview_scroll(1, "units")
-        else:
-            self._settings_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            # force updates for canvas and scrollbar stuff
+            self.update_idletasks()
+            self._on_resize(None)
+            self._on_main_canvas_config(None)
 
     def _redraw_settings(self, features):
         """Draw the GUI area containing the include/exclude and normalization settings for each of the given features.
@@ -400,7 +457,7 @@ class PreProcessingFrame(tk.Frame):
         # Now redraw
         self._settings_frame = tk.Frame(self._settings_canvas, relief='groove', bg=colours.CANVAS_BACK)
 
-        self._settings_frame.bind('<Configure>', self._on_canvas_config)
+        self._settings_frame.bind('<Configure>', self._on_settings_canvas_config)
 
         self._settings_canvas.create_window((0, 0), window=self._settings_frame, anchor='nw')
 
@@ -540,3 +597,80 @@ class PreProcessingFrame(tk.Frame):
                 return True
             else:
                 return False
+
+    def _on_resize(self, event):
+        """Resize the canvas widget according to the user's specification via the mouse.
+
+        This method is called whenever a <Configure> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Configure> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        if event is not None:  # otherwise use latest values of self._canvas_width and self._canvas_height
+            # for forcing updates for canvas/scrollbars
+            self._canvas_width = event.width
+            self._canvas_height = event.height
+        # print("event/canvas width = " + str(self._canvas_width))
+        # print("event/canvas height = " + str(self._canvas_height))
+        if self._canvas_width > self._main_sub_frame.winfo_reqwidth():
+            self._main_canvas.itemconfig(self.c_win, width=self._canvas_width)
+        else:
+            self._main_canvas.itemconfig(self.c_win, width=self._main_sub_frame.winfo_reqwidth())
+        if self._canvas_height > self._main_sub_frame.winfo_reqheight():
+            self._main_canvas.itemconfig(self.c_win, height=self._canvas_height)
+        else:
+            self._main_canvas.itemconfig(self.c_win, height=self._main_sub_frame.winfo_reqheight())
+
+    def _bind_mousewheel(self, event):
+        """Bind all mouse wheel events with respect to the canvas to a canvas-scrolling function.
+
+        This method is called whenever an <Enter> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Enter> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # for Windows OS and MacOS
+        self._main_canvas.bind_all("<MouseWheel>", self._on_mouse_scroll)
+        # for Linux OS
+        self._main_canvas.bind_all("<Button-4>", self._on_mouse_scroll)
+        self._main_canvas.bind_all("<Button-5>", self._on_mouse_scroll)
+
+    def _unbind_mousewheel(self, event):
+        """Unbind all mouse wheel events with respect to the canvas from any function.
+
+        This method is called whenever a <Leave> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Leave> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # for Windows OS and MacOS
+        self._main_canvas.unbind_all("<MouseWheel>")
+        # for Linux OS
+        self._main_canvas.unbind_all("<Button-4>")
+        self._main_canvas.unbind_all("<Button-5>")
+
+    def _on_mouse_scroll(self, event):
+        """Vertically scroll through the canvas by an amount derived from the given <MouseWheel> event.
+
+        :param event: the <MouseWheel> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # differentiate between self._settings_canvas and and the rest
+        # if mouse is on self._settings_canvas or its scrollbar, scroll w.r.t. the self._settings_canvas
+        # otherwise scroll w.r.t. the whole window/canvas (i.e., self._main_canvas)
+        x, y = self.winfo_pointerxy()
+        w = self.winfo_containing(x, y)
+
+        if w == self._settings_canvas or w == self._settings_v_scroll:
+            widget = self._settings_canvas
+        else:
+            widget = self._main_canvas
+
+        # print("Scrolling FEATURE SELECTION TAB........................")
+        if self._OS == 'Linux':
+            if event.num == 4:
+                widget.yview_scroll(-1, "units")
+            elif event.num == 5:
+                widget.yview_scroll(1, "units")
+        else:
+            widget.yview_scroll(int(-1 * (event.delta / 120)), "units")

@@ -503,6 +503,91 @@ class AutoencoderSettings(tk.Frame):
             print("DECODER LAYER " + str(layer) + ": " + str(dhn[layer].get()) + " neurons; "
                   + str(daf[layer].get()) + "activation.")
 
+    def get_code_size(self):
+        """Get the value of the code size parameter as specified by the user via the GUI.
+
+        Returns 0 if the code size Entry widget is empty.
+
+        :return: the code size value.
+        :rtype: int
+        """
+        try:
+            return self._code_size.get()
+        except tk.TclError:  # i.e., code size tkinter Entry is empty
+            return 0
+
+    def get_code_actf(self):
+        """Get the activation function of the code layer as specified by the user via the GUI.
+
+        :return: the activation function of the code layer.
+        :rtype: str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
+        """
+        return self._code_activation_function.get()
+
+    def get_output_actf(self):
+        """Get the activation function of the output layer as specified by the user via the GUI.
+
+        :return: the activation function of the output layer.
+        :rtype: `str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
+        """
+        return self._output_activation_function.get()
+
+    def get_encoder_neurons(self):
+        """Get the number of neurons in each layer in the encoder as specified by the user via the GUI.
+
+        :return: list containing the number of neurons in each layer in the encoder.
+        :rtype: list of int
+        """
+        return [layer.get() for layer in self._encoder_hidden_neurons]
+
+    def get_encoder_actfs(self):
+        """Get the activation function of each layer in the encoder as specified by the user via the GUI.
+
+        :return: list containing the activation functions of each layer in the encoder.
+        :rtype: list of str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
+        """
+        return [layer.get() for layer in self._encoder_hidden_activation_functions]
+
+    def get_decoder_neurons(self):
+        """Get the number of neurons in each layer in the decoder as specified by the user via the GUI.
+
+        :return: list containing the number of neurons in each layer in the decoder.
+        :rtype: list of int
+        """
+        return [layer.get() for layer in self._decoder_hidden_neurons]
+
+    def get_decoder_actfs(self):
+        """Get the activation function of each layer in the decoder as specified by the user via the GUI.
+
+        :return: list containing the activation functions of each layer in the decoder.
+        :rtype: list of str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
+        """
+        return [layer.get() for layer in self._decoder_hidden_activation_functions]
+
+    def get_learn_rate(self):
+        """Get the value of the learning rate parameter as specified by the user via the GUI.
+
+        :return: the learning rate value.
+        :rtype: float
+        """
+        return self._learn_rate.get()
+
+    def get_error_thresh(self):
+        """Get the value of the error threshold parameter as specified by the user via the GUI.
+
+        :return: the error threshold value.
+        :rtype: float
+        """
+        return self._error_thresh.get()
+
+    def get_epochs(self):
+        """Get the value of the epochs parameter as specified by the user via the GUI.
+
+        :return: the epochs value.
+        :rtype: int
+        """
+        return self._epochs.get()
+
 
 # test it...
 # root = tk.Tk()

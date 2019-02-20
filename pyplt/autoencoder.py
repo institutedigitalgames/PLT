@@ -31,7 +31,8 @@ class Autoencoder:
         """
         self._num_inputs = input_size
         self._num_output = self._num_inputs
-        self._ann_topology = encoder_topology + [code_size] + decoder_topology + [self._num_output]
+        self._code_size = code_size
+        self._ann_topology = encoder_topology + [self._code_size] + decoder_topology + [self._num_output]
         self._code_layer_idx = len(encoder_topology)
         self._learn_rate = learn_rate
         self._error_threshold = error_threshold
@@ -188,6 +189,14 @@ class Autoencoder:
             encoded_samples = sess.run(self._encoding, feed_dict={self._X: samples})
 
         return encoded_samples
+
+    def get_code_size(self):
+        """Get the value of the code size parameter.
+
+        :return: the code size value.
+        :rtype: int
+        """
+        return self._code_size
 
     def clean_up(self):
         """Close the `tensorflow` session once the algorithm class instance is no longer needed.

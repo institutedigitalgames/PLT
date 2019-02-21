@@ -204,10 +204,9 @@ class ResultsWindow(tk.Toplevel):
         tk.Label(pf, text="Normalization", font='Ebrima 11 normal').grid(row=r, column=1, padx=(5, 0))
         for f in f_include:
             r += 1
-            if r == 1:  # Skip first row (ID)
-                continue
+            # no need to skip first row as ID is excluded in f_include and f_norm
             if f_include[f].get():  # only if feature included (==True)
-                tk.Label(pf, text=str(f)).grid(row=r, column=0, sticky='w')
+                tk.Label(pf, text=str(f)).grid(row=r, column=0, sticky='w')  # TODO: need orig_feats[f] here for label
                 tk.Label(pf, text=text.real_type_name(str(f_norm[f].get()))).grid(row=r, column=1)
 
         ttk.Separator(preproc_frame, orient=tk.HORIZONTAL).pack(fill=tk.BOTH, expand=True, pady=5)

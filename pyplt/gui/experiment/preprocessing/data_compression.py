@@ -50,8 +50,8 @@ class AutoencoderSettings(tk.Frame):
         self._actf_options = [ActivationType.SIGMOID.name]
 
         # - backpropagation variables
-        self._learn_rate = tk.DoubleVar(value=0.1)
-        self._error_thresh = tk.DoubleVar(value=0.1)
+        self._learn_rate = tk.DoubleVar(value=0.001)
+        self._error_thresh = tk.DoubleVar(value=0.001)
         self._epochs = tk.IntVar(value=10)
 
         # - presentation variables
@@ -118,7 +118,7 @@ class AutoencoderSettings(tk.Frame):
         self._i_neurons = ttk.Entry(ann_input_layer_frame, width=5, style='PL.PLT.TEntry')
         self._i_neurons.insert(0, str(self._output_size))
         self._i_neurons.grid(row=0, column=1, padx=self._neurons_padx)
-        self._i_neurons.configure(state='disabled')  # disabled since we will always have 1 neuron as output!
+        self._i_neurons.configure(state='disabled')  # disabled since depends only on dataset
         self._i_neurons.bind("<<PLTStateToggle>>", self._check_i_neurons_entry)  # bind
         # ^ n.b. ensured that 'Run Experiment' button, OutputLayer#nuerons checkbox and Steps 2-4 of BeginnerMenu
         # are re-disabled or re-enabled accordingly on close of stacked windows (help dialog or load params).
@@ -224,7 +224,7 @@ class AutoencoderSettings(tk.Frame):
         self._o_neurons = ttk.Entry(ann_output_layer_frame, width=5, style='PL.PLT.TEntry')
         self._o_neurons.insert(0, str(self._output_size))
         self._o_neurons.grid(row=1, column=1, padx=self._neurons_padx)
-        self._o_neurons.configure(state='disabled')  # disabled since we will always have 1 neuron as output!
+        self._o_neurons.configure(state='disabled')  # disabled since depends only on dataset
         self._o_neurons.bind("<<PLTStateToggle>>", self._check_o_neurons_entry)  # bind
 
         # ^ n.b. ensured that 'Run Experiment' button, OutputLayer#nuerons checkbox and Steps 2-4 of BeginnerMenu
@@ -491,6 +491,16 @@ class AutoencoderSettings(tk.Frame):
             else:
                 return False
 
+    def trace_code_size(self, callback_fn):
+        """Bind the given callback function to the code size `IntVar` (`tkinter` variable).
+
+        The callback function is called each time the value of the code size Entry widget changes.
+
+        :param callback_fn: the callback function.
+        :return: function
+        """
+        self._code_size.trace('w', callback_fn)
+
     def print_topology(self):
         ehn = self._encoder_hidden_neurons
         eaf = self._encoder_hidden_activation_functions
@@ -538,7 +548,7 @@ class AutoencoderSettings(tk.Frame):
         :return: list containing the number of neurons in each layer in the encoder.
         :rtype: list of int
         """
-        return [layer.get() for layer in self._encoder_hidden_neurons]
+        return [layer.get() for layer in self._encoder_hidden_neurons.values()]
 
     def get_encoder_actfs(self):
         """Get the activation function of each layer in the encoder as specified by the user via the GUI.
@@ -546,7 +556,7 @@ class AutoencoderSettings(tk.Frame):
         :return: list containing the activation functions of each layer in the encoder.
         :rtype: list of str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
         """
-        return [layer.get() for layer in self._encoder_hidden_activation_functions]
+        return [layer.get() for layer in self._encoder_hidden_activation_functions.values()]
 
     def get_decoder_neurons(self):
         """Get the number of neurons in each layer in the decoder as specified by the user via the GUI.
@@ -554,7 +564,7 @@ class AutoencoderSettings(tk.Frame):
         :return: list containing the number of neurons in each layer in the decoder.
         :rtype: list of int
         """
-        return [layer.get() for layer in self._decoder_hidden_neurons]
+        return [layer.get() for layer in self._decoder_hidden_neurons.values()]
 
     def get_decoder_actfs(self):
         """Get the activation function of each layer in the decoder as specified by the user via the GUI.
@@ -562,7 +572,7 @@ class AutoencoderSettings(tk.Frame):
         :return: list containing the activation functions of each layer in the decoder.
         :rtype: list of str (names of `:class:pyplt.plalgorithms.backprop_tf.ActivationType`)
         """
-        return [layer.get() for layer in self._decoder_hidden_activation_functions]
+        return [layer.get() for layer in self._decoder_hidden_activation_functions.values()]
 
     def get_learn_rate(self):
         """Get the value of the learning rate parameter as specified by the user via the GUI.
@@ -587,6 +597,28 @@ class AutoencoderSettings(tk.Frame):
         :rtype: int
         """
         return self._epochs.get()
+
+    def set_input_size(self, input_size):
+        """Set the value of the input size parameter.
+
+        :param input_size: the new input size value.
+        :type input_size: int
+        """
+        # set variables
+        self._input_size = input_size
+        self._output_size = input_size
+        # enable entry widgets
+        self._i_neurons.configure(state='normal')
+        self._o_neurons.configure(state='normal')
+        # delete/clear entry text
+        self._i_neurons.delete(0, 'end')
+        self._o_neurons.delete(0, 'end')
+        # insert entry text
+        self._i_neurons.insert(0, str(self._input_size))
+        self._o_neurons.insert(0, str(self._output_size))
+        # re-disable entry widgets
+        self._i_neurons.configure(state='disabled')
+        self._o_neurons.configure(state='disabled')
 
 
 # test it...

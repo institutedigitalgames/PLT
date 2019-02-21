@@ -143,7 +143,7 @@ class Experiment:
         self._features = features
         self._objects_have_id = True
         # (re) init norm_settings
-        self._norm_settings = dict.fromkeys(self._features, NormalizationType.NONE.name)
+        self._norm_settings = dict.fromkeys(np.arange(len(self._features)).tolist(), NormalizationType.NONE.name)
 
     def load_rank_data(self, file_path, has_fnames=False, has_ids=False, separator=',', col_names=None,
                        na_filter=True):
@@ -272,7 +272,7 @@ class Experiment:
         self._features = features
         self._samples_have_id = True
         # (re) init norm_settings
-        self._norm_settings = dict.fromkeys(self._features, NormalizationType.NONE.name)
+        self._norm_settings = dict.fromkeys(np.arange(len(self._features)).tolist(), NormalizationType.NONE.name)
 
     # Preprocessing
 
@@ -291,29 +291,20 @@ class Experiment:
         :param norm_method: the normalization method to be used.
         :type norm_method: :class:`pyplt.util.enums.NormalizationType`
         """
-        # add 1 to every feature id in list to account for 'ID' column !!!
-        if isinstance(feature_ids, int):
-            feature_ids = feature_ids + 1
-        else:
-            feature_ids = [f+1 for f in feature_ids]
-        # get feature names
-        if self.is_dual_format():
-            features = self._objects.columns[feature_ids]
-        else:
-            features = self._data.columns[feature_ids]
-        if isinstance(feature_ids, int) or len(feature_ids) == 1:
-            self._norm_settings[features] = norm_method.name
-        else:  # i.e. list of features
-            for feat in features:
+        # no need to +1 to account for 'ID' column bc self._norm_settings is only used after ID column is removed
+        if isinstance(feature_ids, int):  # if just one feature id
+            self._norm_settings[feature_ids] = norm_method.name
+        else:  # i.e. list of feature ids
+            for feat in feature_ids:
                 self._norm_settings[feat] = norm_method.name
 
     def _set_norm_settings(self, norm_settings):
         """Set the normalization methods to be used for each of the features in the dataset.
 
         The actual application of the normalization methods to the features occurs when the experiment is run.
-        :param norm_settings: a dict containing the feature names as the dict's keys and names of enumerated constants
-            of type :class:`pyplt.util.enums.NormalizationType` indicating how the corresponding feature is to be
-            normalized as the dict's values.
+        :param norm_settings: a dict with the indices of the features as the dict's keys and
+            names of enumerated constants of type :class:`pyplt.util.enums.NormalizationType` (indicating how the
+            corresponding feature is to be normalized) as the dict's values.
         :type norm_settings: dict of str (names of :class:`pyplt.util.enums.NormalizationType`)
         """
         self._norm_settings = norm_settings
@@ -465,10 +456,13 @@ class Experiment:
             self._data = data_copy.set_index(data_copy.columns[0])
 
         # Step B1. Get features
-        if self._data is not None:
-            self._features = list(self._data.columns[:-1])  # all except last column (ratings)!
+        if self._autoencoder is not None:
+            self._features = ["ExtractedFeature" + str(f+1) for f in range(self._autoencoder.get_code_size())]
         else:
-            self._features = list(self._objects.columns)
+            if self._data is not None:
+                self._features = list(self._data.columns[:-1])  # all except last column (ratings)!
+            else:
+                self._features = list(self._objects.columns)
 
         self._orig_feats = self._features.copy()
 
@@ -567,7 +561,9 @@ class Experiment:
             print("encoded_samples")
             print(encoded_samples)
             n_new_feats = encoded_samples.shape[1]  # n_cols
-            new_cols = ["F" + str(n) for n in range(n_new_feats)]
+            new_cols = ["ExtractedFeature" + str(n+1) for n in range(n_new_feats)]
+            print("new features:")
+            print(n_new_feats)
 
             if self._is_dual_format:  # dual file format
                 old_index = self._objects.index
@@ -914,18 +910,11 @@ class Experiment:
         if NormalizationType.NONE.name in norm_methods:
             norm_methods.remove(NormalizationType.NONE.name)  # ignore NONE method type!
         # get list of feats for each chosen norm_method
-        nm_feats = [[k for k, v in self._norm_settings.items() if v == nm] for nm in norm_methods]
-        print("nm_feats: ")
-        print(nm_feats)
-        if self._is_dual_format:  # dual file format
-            features = self._objects.columns
-        else:  # single file format
-            features = self._data.columns[:-1]
-        # get subsets of data for each chosen norm_method
-        nm_feat_ids = [[f for f in range(len(features)) if features[f] in nm] for nm in nm_feats]
+        nm_feat_ids = [[k for k, v in self._norm_settings.items() if v == nm] for nm in norm_methods]
         # ^ confirmed to work for ranks-auto, ratings-auto
         print("nm_feat_ids: ")
         print(nm_feat_ids)
+        # get subsets of data for each chosen norm_method
         n = 0
         for nm in norm_methods:
             ids = nm_feat_ids[n]
@@ -1060,8 +1049,10 @@ class Experiment:
         # -- HORIZONTAL VERSION --
         # original (included) features
         # normalization
+        norm_feat_names = [self._orig_feats[f] for f in range(len(self._orig_feats))
+                           if f in list(self._norm_settings.keys())]
         header.extend(["Original Included Features", "Normalization"])
-        values.extend([str(self._orig_feats), str(list(self._norm_settings.values()))])
+        values.extend([str(norm_feat_names), str(list(self._norm_settings.values()))])
         # ^ for normalization, save dict values only !!!
         header.extend(["Shuffle", "Shuffle Seed"])
         shuffle = "No"
@@ -1424,9 +1415,9 @@ class Experiment:
         :type ranks_path: str, optional
         :param single_path: the path of the single data file used in the experiment (if applicable) (default None).
         :type single_path: str, optional
-        :param norm_settings: specifies the normalization settings for each feature with the index of the
+        :param norm_settings: specifies the normalization settings for each feature with the indices of the
             features as the dict's keys and the corresponding type of normalization used as the dict's values.
-        :type norm_settings: dict of :class:`pyplt.util.enums.NormalizationType`
+        :type norm_settings: dict of str (names of :class:`pyplt.util.enums.NormalizationType`)
         """
         # hack for GUI only
         if not (obj_path == ""):
@@ -1492,9 +1483,9 @@ class Experiment:
     def get_norm_settings(self):
         """Get the normalization settings for each feature in the original objects data.
 
-        :return: a dict containing the feature names as keys and corresponding methods with which the features
-            are to be normalized as values.
-        :rtype: dict of :class:`pyplt.util.enums.NormalizationType`
+        :return: a dict with the indices of the features as the dict's keys and the corresponding methods with which
+            the features are to be normalized as the dict's values.
+        :rtype: dict of str (names of :class:`pyplt.util.enums.NormalizationType`)
         """
         return self._norm_settings
 

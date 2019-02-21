@@ -137,6 +137,22 @@ class PreProcessingTab(LockableTab):
         """
         return self._frame.get_shuffle_settings()
 
+    def get_autoencoder_menu(self):
+        """Get the autoencoder GUI menu widget through which the parameter values selected by the user may be read.
+
+        :return: the autoencoder menu widget.
+        :rtype: `:class:pyplt.gui.experiment.preprocessing.data_compression.AutoencoderSettings`
+        """
+        return self._frame.get_autoencoder_menu()
+
+    def auto_extract_enabled(self):
+        """Indicate whether or not automatic feature selection (via autoencoder) has been chosen.
+
+        :return: specifies whether or not automatic feature selection (via autoencder) was chosen.
+        :rtype: bool
+        """
+        return self._frame.auto_extract_enabled()
+
 
 class PreProcessingFrame(tk.Frame):
     """Frame widget that is visible whenever the `Data Pre-Processing tab` is in the 'unlocked' state.
@@ -333,6 +349,8 @@ class PreProcessingFrame(tk.Frame):
                                                              self._on_resize)
                 # ^ -1 to exclude ID column
                 self._autoencoder_menu.grid(row=1, column=0, sticky='ns')
+                # call self._redraw_settings to update features each time code size param value changes!
+                self._autoencoder_menu.trace_code_size(self._redraw_settings)
             else:
                 self._autoencoder_menu.grid(row=1, column=0, sticky='ns')
             # force updates for canvas and scrollbar stuff
@@ -342,6 +360,9 @@ class PreProcessingFrame(tk.Frame):
         else:
             if self._autoencoder_menu is not None:
                 self._autoencoder_menu.grid_forget()
+        # call self._redraw_settings to update features each time automatic feature extraction
+        # via autoencoder is toggled on/off!
+        self._redraw_settings()
 
     def _toggle_seed_menu(self):
         """Show or hide shuffle submenu for inputting random seed parameter."""
@@ -361,11 +382,13 @@ class PreProcessingFrame(tk.Frame):
         all features are included; otherwise they are all excluded (and each of their corresponding checkboxes in the
         GUI are updated accordingly).
         """
-        f_id = 0
-        for f_name in self._include_settings:
-            if f_id >= 1:
-                self._include_settings[f_name].set(self._include_all.get())
-            f_id += 1
+        if self._extract.get():
+            # if autoencoder is used, keep all features included
+            # keep on (True) all the time via binding
+            self._include_all.set(True)
+        else:
+            for f_id in self._include_settings:
+                self._include_settings[f_id].set(self._include_all.get())
 
     def _toggle_normalize_all(self):
         """Set the normalization to the given method for all features at one go.
@@ -375,8 +398,8 @@ class PreProcessingFrame(tk.Frame):
         GUI are updated accordingly).
         """
         sel = self._normalize_all.get()
-        for f_name in self._norm_settings:
-            self._norm_settings[f_name].set(sel)
+        for f_id in self._norm_settings:
+            self._norm_settings[f_id].set(sel)
 
     def destroy_tab(self):
         """Destroy the contents of the tab."""
@@ -418,7 +441,12 @@ class PreProcessingFrame(tk.Frame):
             h_scroll.pack(side='bottom', fill='x')
             self._settings_canvas.configure(xscrollcommand=h_scroll.set)
 
-            self._redraw_settings(self._features)
+            # reset input_size parameter of autoencoder GUI menu according to potentially new data!
+            if self._extract.get() and (self._autoencoder_menu is not None):
+                self._autoencoder_menu.set_input_size(len(self._features)-1)
+                # ^ -1 to exclude ID column
+
+            self._redraw_settings()
 
             self._settings_canvas.pack(side='left', expand=True, fill=tk.BOTH)
 
@@ -427,7 +455,7 @@ class PreProcessingFrame(tk.Frame):
             self._on_resize(None)
             self._on_main_canvas_config(None)
 
-    def _redraw_settings(self, features):
+    def _redraw_settings(self, *args):
         """Draw the GUI area containing the include/exclude and normalization settings for each of the given features.
 
         The include/exclude settings consist of a checkbox (`ttk.Checkbutton` widgets)
@@ -435,18 +463,24 @@ class PreProcessingFrame(tk.Frame):
         normalization settings consist of a drop-down menu (`ttk.OptionMenu` widgets)
         for each feature indicating how it is to be normalized.
 
-        :param features: the features extracted from the objects data being pre-processed.
-        :type features: list of str
+        :param args: additional arguments for when the method is called as a callback function
+            via the tk.IntVar.trace method.
         """
         # print("redraw settings...")
         self._include_settings = {}
         self._norm_settings = {}
 
         # Initialize settings for all features (include all with no normalization)
-        for feat in self._features:
-            self._include_settings[feat] = tk.BooleanVar(value=True)
-            self._norm_settings[feat] = tk.StringVar(value=NormalizationType.NONE.name)
-            # n.b. can then go back to enum via NormalizationType[given str name]
+        if self._extract.get():  # if using automatic feature extraction via autoencoder
+            code_size = self._autoencoder_menu.get_code_size()
+            n_feats = code_size
+            feat_names = ["ExtractedFeature" + str(f+1) for f in range(n_feats)]
+        else:  # if using predetermined features
+            n_feats = len(self._features)-1  # -1 to exclude ID column
+            feat_names = self._features[1:]  # V.Imp.: excluding first feature (i.e., ID)!
+        self._include_settings = {f: tk.BooleanVar(value=True) for f in range(n_feats)}
+        self._norm_settings = {f: tk.StringVar(value=NormalizationType.NONE.name) for f in range(n_feats)}
+        # n.b. can then go back to enum via NormalizationType[given str name]
 
         # Destroy old stuff first
         if self._settings_frame is not None:
@@ -472,26 +506,31 @@ class PreProcessingFrame(tk.Frame):
             item.grid(row=r, column=cn, sticky='nsew')
             cn += 1
         r += 1
-        f = 1
-        for feat in features[1:]:  # V.Imp.: excluding first feature (i.e., ID)!
+        for f in range(n_feats):
+            feat = feat_names[f]
             c = 0
             for col in columns:
                 checkbtn = None
                 optmenu = None
                 if col == 'Include?':
                     item = tk.Frame(self._settings_frame, borderwidth=1, relief='groove')
-                    checkbtn = ttk.Checkbutton(item, variable=self._include_settings[feat], onvalue=True,
+                    checkbtn = ttk.Checkbutton(item, variable=self._include_settings[f], onvalue=True,
                                                offvalue=False)
                     checkbtn.pack()
                     # item.invoke()  # True by default
+                    if self._extract.get():
+                        # if autoencoder is used, keep all features included
+                        # keep on (True) all the time via binding
+                        checkbtn.configure(command=lambda f_id=f: self._disable_include_settings(f_id))
+                        # ^ since we use bind, it will remain disabled after closing Help so no need for extra method
                 elif col == 'Feature':
-                    item = tk.Label(self._settings_frame, text=str(feat), borderwidth=1, relief='groove')
+                    item = tk.Label(self._settings_frame, text=str(feat), borderwidth=1, relief='groove', padx=5)
                 else:
                     options = [NormalizationType.NONE.name,
                                NormalizationType.MIN_MAX.name,
                                NormalizationType.Z_SCORE.name]
                     item = tk.Frame(self._settings_frame, borderwidth=1, relief='groove')
-                    optmenu = ttk.OptionMenu(item, self._norm_settings[feat], options[0], *options)
+                    optmenu = ttk.OptionMenu(item, self._norm_settings[f], options[0], *options)
                     optmenu.pack(fill=tk.BOTH, expand=True)
                 if r % 2 == 0:
                     if checkbtn is not None:
@@ -508,15 +547,21 @@ class PreProcessingFrame(tk.Frame):
                 item.grid(row=r, column=c, sticky='nsew')
                 c += 1
             r += 1
-            f += 1
 
         for c in range(len(columns)):
             self._settings_frame.grid_columnconfigure(c, weight=1, uniform=columns[c])
 
+    def _disable_include_settings(self, f_id):
+        """Keep the include/exclude checkbutton widget of a given feature on when autoencoder is enabled.
+
+        :param f_id: the index of the feature to keep included.
+        """
+        self._include_settings[f_id].set(True)  # just always keep true
+
     def get_include_settings(self):
         """Get the current include/exclude settings for each feature in the original objects data.
 
-        :return: a dict containing the feature names as the dict's keys and booleans indicating whether the
+        :return: a dict containing the feature indices as the dict's keys and booleans indicating whether the
             corresponding feature is to be included in (True) or excluded from (False) the experiment as
             the dict's values.
         :rtype: dict of bool
@@ -526,7 +571,7 @@ class PreProcessingFrame(tk.Frame):
     def get_norm_settings(self):
         """Get the normalization settings for each feature in the original objects data.
 
-        :return: a dict containing the feature names as the dict's keys and enumerated constants of type
+        :return: a dict containing the feature indices as the dict's keys and enumerated constants of type
             :class:`pyplt.util.enums.NormalizationType` indicating how the corresponding feature is to be normalized
             as the dict's values.
         :rtype: dict of :class:`pyplt.util.enums.NormalizationType`
@@ -674,3 +719,19 @@ class PreProcessingFrame(tk.Frame):
                 widget.yview_scroll(1, "units")
         else:
             widget.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def get_autoencoder_menu(self):
+        """Get the autoencoder GUI menu widget through which the parameter values selected by the user may be read.
+
+        :return: the autoencoder menu widget.
+        :rtype: `:class:pyplt.gui.experiment.preprocessing.data_compression.AutoencoderSettings`
+        """
+        return self._autoencoder_menu
+
+    def auto_extract_enabled(self):
+        """Indicate whether or not automatic feature selection (via autoencoder) has been chosen.
+
+        :return: specifies whether or not automatic feature selection (via autoencder) was chosen.
+        :rtype: bool
+        """
+        return self._extract.get()

@@ -21,6 +21,7 @@ from tkinter import messagebox
 from threading import Thread
 from queue import Queue
 
+from pyplt.autoencoder import Autoencoder
 from pyplt.evaluation.cross_validation import KFoldCrossValidation
 from pyplt.gui.experiment.preflearning.ranksvm_menu import RankSVMMenu
 from pyplt.gui.experiment.preflearning.backprop_menu import BackpropMenu
@@ -422,24 +423,59 @@ class PLFrame(tk.Frame):
         print(pl_eval_params)
         print("--------------------------------------")
 
+        auto_extract_enabled = self._preproc_tab.auto_extract_enabled()
+
         use_feats = [key for key, val in feat_include_settings.items() if val.get()]  # if val.get() is True
+        # ^ feature ids not names/labels
+
+        # +1 each feat ID and add a 0 to use_feats to make up for ID column which hasn't yet been removed
+        # no need if autoencoder is enabled bc use_feats are only used for input size
+        if not auto_extract_enabled:
+            new_use_feats = [f+1 for f in use_feats]
+            use_feats = [0] + new_use_feats
 
         # Get actual objects and set up Experiment variables
         exp = Experiment()
         if isinstance(data, tuple):
             _objects, _ranks = data
-            _objects = _objects.loc[:, use_feats]  # include/exclude features
-            # ^ ID col still included bc its include_settings value was init to True in preproctab
+            if auto_extract_enabled:
+                # N.B. ignore use_feats if autoencoder is enabled bc we need all original features
+                # use only for input size
+                use_feats = list(_objects.columns)[:-1]  # exclude last column to account for ID column
+            else:
+                _objects = _objects.iloc[:, use_feats]  # include/exclude features
+                # ^ ID col still included bc we took care of it above
             exp._set_objects(_objects, has_ids=True)
             # ^ has_ids=True bc _load_data() adds ID column if there isn't already
             exp._set_ranks(_ranks, has_ids=True)  # has_ids=True bc _load_data() adds ID column if there isn't already
         else:
-            use_feats.append(data.columns[-1])  # last column (ratings)
-            data = data.loc[:, use_feats]  # include/exclude features
-            # ^ ID col still included bc its include_settings value was init to True in preproctab
+            last_col_id = len(data.columns)-1
+            use_feats.append(last_col_id)  # include last column (ratings)
+            if auto_extract_enabled:
+                # N.B. ignore use_feats if autoencoder is enabled bc we need all original features
+                # use only for input size
+                use_feats = list(data.columns)[:-2]  # exclude last 2 columns to account for ID column and ratings col
+            else:
+                data = data.iloc[:, use_feats]  # include/exclude features
+                # ^ ID col still included bc we took care of it above
             exp._set_single_data(data, has_ids=True)
             # ^ has_ids=True bc _load_data() adds ID column if there isn't already
             exp.set_rank_derivation_params(mdm=mdm, memory=memory)
+
+        if auto_extract_enabled:
+            # set autoencoder
+            ae_menu = self._preproc_tab.get_autoencoder_menu()
+            input_size = len(use_feats)
+            code_size = ae_menu.get_code_size()
+            encoder_top = ae_menu.get_encoder_neurons()
+            # encoder_actf = ae_menu.get_encoder_actfs()
+            decoder_top = ae_menu.get_decoder_neurons()
+            # decoder_actf = ae_menu.get_decoder_actfs()
+            lr = ae_menu.get_learn_rate()
+            error_thresh = ae_menu.get_error_thresh()
+            e = ae_menu.get_epochs()
+            ae = Autoencoder(input_size, code_size, encoder_top, decoder_top, lr, error_thresh, e)
+            exp.set_autoencoder(ae)
 
         # set normalization methods (but first convert to dict of NormalizationType-names values
         # rather than StringVar-of-NormalizationType-names values)
@@ -762,7 +798,7 @@ class PLFrame(tk.Frame):
         # get the features selected by fs (if applicable)
         sel_feats = exp.get_features()
 
-        preproc_info = [self._preproc_tab.get_include_settings(),
+        preproc_info = [self._preproc_tab.get_include_settings(),  # TODO: change from f_names to f_ids in result screen
                         self._preproc_tab.get_norm_settings()]
 
         pw.put("DONE")

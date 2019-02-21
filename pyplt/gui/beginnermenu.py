@@ -281,8 +281,7 @@ class BeginnerMenu(tk.Toplevel):
             print("Setting normalization for feature " + str(c_id) + "/" + str(col_names[c_id]))
         self._exp.set_normalization(col_ids[:-1], NormalizationType.MIN_MAX)
         # ^ (min_val=0, max_val=1 by default)
-        # ^ remove last id to avoid out of range exception since col_ids includes ID col bc exp.set_normalization()
-        # ^ (contd.) will +1 each col_id bc of ID col
+        # ^ remove last id to avoid out of range exception since col_ids includes ID col
         # don't forget to convert norm_settings values to tk.StringVars in order to work with ResultsWindow!!
         self._norm_settings = {c: tk.StringVar(value=NormalizationType.MIN_MAX.name) for c in col_names}
         # also in the process, list all features as included in the experiment
@@ -470,7 +469,7 @@ class BeginnerMenu(tk.Toplevel):
         # get the features selected by fs (if applicable)
         sel_feats = exp.get_features()
 
-        preproc_info = [self._include_settings,
+        preproc_info = [self._include_settings,  # TODO: change from f_names to f_ids in result screen
                         self._norm_settings]
 
         pw.put("DONE")

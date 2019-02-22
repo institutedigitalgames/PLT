@@ -60,8 +60,8 @@ class BackpropagationTF(PLAlgorithm):
             training set (default 10).
         :type epochs: int, optional
         :param activation_functions: a list of the activation function to be used across the neurons
-            for each layer of the ANN; if None, all layers will use the Logistic Sigmoid function i.e.
-            :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.SIGMOID` (default None).  # TODO: change to relu
+            for each layer of the ANN; if None, all layers will use the Rectified Linear Unit (ReLU) function i.e.
+            :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
         :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
         :param debug: specifies whether or not to print notes to console for debugging (default False).
         :type debug: bool, optional
@@ -93,13 +93,16 @@ class BackpropagationTF(PLAlgorithm):
         activation_fn_names = []
         if activation_functions is None:
             for _ in self._ann_topology:  # for each layer
-                self._activation_fns.append(tf.nn.sigmoid)  # TODO: change to relu
-                activation_fn_names.append(ActivationType.SIGMOID.name)
+                self._activation_fns.append(tf.nn.relu)
+                activation_fn_names.append(ActivationType.RELU.name)
         else:
             for act_fn in activation_functions:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.sigmoid)
                     activation_fn_names.append(ActivationType.SIGMOID.name)
+                elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):
+                    self._activation_fns.append(tf.nn.relu)
+                    activation_fn_names.append(ActivationType.RELU.name)
                 # TODO: do same for new activation functions
 
         self._vars_declared = False

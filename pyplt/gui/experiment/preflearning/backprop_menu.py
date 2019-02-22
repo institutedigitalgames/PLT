@@ -43,8 +43,8 @@ class BackpropMenu(tk.Frame):
         self._hidden_neurons = dict()
         self._hidden_activation_functions = dict()
         self._hidden_neurons[0] = tk.IntVar(value=5)
-        self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.SIGMOID.name)
-        self._output_activation_function = tk.StringVar(value=ActivationType.SIGMOID.name)
+        self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.RELU.name)
+        self._output_activation_function = tk.StringVar(value=ActivationType.RELU.name)
         self._learn_rate = tk.DoubleVar(value=0.1)
         self._error_thresh = tk.DoubleVar(value=0.1)
         self._epochs = tk.IntVar(value=10)
@@ -137,7 +137,7 @@ class BackpropMenu(tk.Frame):
         # solution via binding state changes to method which ensures re-disable (or re-enable if appropriate time/case).
 
         # activation function
-        options = [ActivationType.SIGMOID.name]
+        options = [ActivationType.RELU.name, ActivationType.SIGMOID.name]
         o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function, options[0], *options,
                                style='Sub.PL.PLT.TMenubutton')
         o_afn.grid(row=1, column=2)
@@ -203,8 +203,8 @@ class BackpropMenu(tk.Frame):
         self.ann_hidden_layers_frame.after_idle(lambda: l_neurons.config(validate='all'))
         # ^ re-enables validation after using .set() with the Vars to initialize them with default values
         # activation functions
-        options = [ActivationType.SIGMOID.name]
-        self._hidden_activation_functions[layer] = tk.StringVar(value=ActivationType.SIGMOID.name)
+        options = [ActivationType.RELU.name, ActivationType.SIGMOID.name]
+        self._hidden_activation_functions[layer] = tk.StringVar(value=ActivationType.RELU.name)
         # ^ init to default value
         l_afn = ttk.OptionMenu(self.ann_hidden_layers_frame, self._hidden_activation_functions[layer], options[0],
                                *options, style='Sub.PL.PLT.TMenubutton')
@@ -326,8 +326,8 @@ class BackpropMenu(tk.Frame):
         # - the number of hidden layers (default 1);
         # - a dict containing the number of neurons in each hidden layer (default {0: 5});
         # - a dict specifying the name of the activation function type used for each hidden layer
-        # (default {0: ActivationType.SIGMOID.name});
-        # - the name of activation function type of the output neuron (default ActivationType.SIGMOID.name);
+        # (default {0: ActivationType.RELU.name});
+        # - the name of activation function type of the output neuron (default ActivationType.RELU.name);
         # - the learning rate (default 0.1);
         # - the error threshold (default 0.1);
         # - the number of epochs (default 10).
@@ -356,7 +356,7 @@ class BackpropMenu(tk.Frame):
         # error_threshold - the error threshold (default 0.1)
         # epochs - the number of epochs (default 10)
         # activation_functions - the activation functions for each neuron layer in the network
-        # ^ (default [ActivationType.SIGMOID.name, ActivationType.SIGMOID.name])
+        # ^ (default [ActivationType.RELU.name, ActivationType.RELU.name])
 
         params_dict = {'ann_topology': ann_topology,
                        'learn_rate': self._learn_rate.get(),

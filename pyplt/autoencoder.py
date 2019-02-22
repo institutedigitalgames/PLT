@@ -22,8 +22,8 @@ class Autoencoder:
             excluding the code layer and the output layer.
         :type decoder_topology: list of int
         :param activation_functions: a list of the activation function to be used across the neurons
-            for each layer of the ANN (excluding input layer); if None, all layers will use the Logistic Sigmoid
-            function i.e. :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
+            for each layer of the ANN (excluding input layer); if None, all layers will use the Rectified Linear Unit
+            (ReLU) function i.e. :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
         :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
         :param learn_rate: the learning rate used in the weight update step of the algorithm (default 0.1).
         :type learn_rate: float, optional
@@ -58,6 +58,9 @@ class Autoencoder:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.sigmoid)
                     activation_fn_names.append(ActivationType.SIGMOID.name)
+                elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):
+                    self._activation_fns.append(tf.nn.relu)
+                    activation_fn_names.append(ActivationType.RELU.name)
                 # TODO: do same for new activation functions
 
         print("AUTOENCODER activation functions:")

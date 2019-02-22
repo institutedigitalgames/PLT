@@ -44,6 +44,8 @@ def real_type_name(type_name):
         return "Polynomial"
     elif ActivationType.SIGMOID.name in type_name:
         return str(type_name).replace(ActivationType.SIGMOID.name, "Sigmoid")
+    elif ActivationType.RELU.name in type_name:
+        return str(type_name).replace(ActivationType.RELU.name, "ReLU")
     else:  # other / unknown
         return capwords(type_name)  # e.g. Linear, Backpropagation, Holdout
 

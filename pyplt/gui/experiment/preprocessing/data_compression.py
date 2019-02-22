@@ -25,13 +25,13 @@ class AutoencoderSettings(tk.Frame):
         self._encoder_hidden_neurons = dict()
         self._encoder_hidden_activation_functions = dict()
         # self._hidden_neurons[0] = tk.IntVar(value=5)
-        # self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.SIGMOID.name)
+        # self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.RELU.name)
         self._num_encoder_hidden_layers = 0
         self._gui_encoder_layer_rows = []
 
         # - code layer variables
         self._code_size = tk.IntVar()  # no default value bc depends on input size...
-        self._code_activation_function = tk.StringVar(value=ActivationType.SIGMOID.name)
+        self._code_activation_function = tk.StringVar(value=ActivationType.RELU.name)
 
         # - decoder variables
         self._decoder_hidden_neurons = dict()
@@ -41,12 +41,12 @@ class AutoencoderSettings(tk.Frame):
 
         # - output layer variables
         self._output_size = self._input_size
-        self._output_activation_function = tk.StringVar(value=ActivationType.SIGMOID.name)
+        self._output_activation_function = tk.StringVar(value=ActivationType.RELU.name)
 
         # - total / general variables
         self._decoder_labels = dict()
         self._num_total_hidden_layers = 0
-        self._actf_options = [ActivationType.SIGMOID.name]
+        self._actf_options = [ActivationType.RELU.name, ActivationType.SIGMOID.name]
 
         # - backpropagation variables
         self._learn_rate = tk.DoubleVar(value=0.001)
@@ -345,7 +345,7 @@ class AutoencoderSettings(tk.Frame):
         frame.after_idle(lambda: l_neurons.config(validate='all'))
         # ^ re-enables validation after using .set() with the Vars to initialize them with default values
         # activation functions
-        hidden_activation_functions[layer_local] = tk.StringVar(value=ActivationType.SIGMOID.name)
+        hidden_activation_functions[layer_local] = tk.StringVar(value=ActivationType.RELU.name)
         # ^ init to default value
         l_afn = ttk.OptionMenu(frame, hidden_activation_functions[layer_local], self._actf_options[0],
                                *self._actf_options, style='Sub.PL.PLT.TMenubutton')

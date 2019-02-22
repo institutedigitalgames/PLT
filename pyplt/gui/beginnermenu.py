@@ -319,7 +319,7 @@ class BeginnerMenu(tk.Toplevel):
         # TODO: for special cases where we want parameter values other than the defaults, add an if statement here
         if pl_algo == PLAlgo.BACKPROPAGATION:
             pl_algo_obj = BackpropagationTF(ann_topology=[5, 1],
-                                            activation_functions=[ActivationType.SIGMOID, ActivationType.SIGMOID])
+                                            activation_functions=[ActivationType.RELU, ActivationType.RELU])
             # ^ learn_rate, error_threshold, epochs: (default: 0.1, 0.1, 10)
         elif pl_algo == PLAlgo.RANKSVM:
             pl_algo_obj = RankSVM(kernel=KernelType.RBF, gamma=1)

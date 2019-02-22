@@ -110,3 +110,4 @@ class ActivationType(Enum):
     """
     # THRESHOLD = 0
     SIGMOID = 1
+    RELU = 2

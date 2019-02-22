@@ -467,14 +467,17 @@ class PLFrame(tk.Frame):
             ae_menu = self._preproc_tab.get_autoencoder_menu()
             input_size = len(use_feats)
             code_size = ae_menu.get_code_size()
+            code_actf = ae_menu.get_code_actf()
             encoder_top = ae_menu.get_encoder_neurons()
-            # encoder_actf = ae_menu.get_encoder_actfs()
+            encoder_actf = ae_menu.get_encoder_actfs()
             decoder_top = ae_menu.get_decoder_neurons()
-            # decoder_actf = ae_menu.get_decoder_actfs()
+            decoder_actf = ae_menu.get_decoder_actfs()
+            output_actf = ae_menu.get_output_actf()
+            activation_functions = encoder_actf + [code_actf] + decoder_actf + [output_actf]
             lr = ae_menu.get_learn_rate()
             error_thresh = ae_menu.get_error_thresh()
             e = ae_menu.get_epochs()
-            ae = Autoencoder(input_size, code_size, encoder_top, decoder_top, lr, error_thresh, e)
+            ae = Autoencoder(input_size, code_size, encoder_top, decoder_top, activation_functions, lr, error_thresh, e)
             exp.set_autoencoder(ae)
 
         # set normalization methods (but first convert to dict of NormalizationType-names values

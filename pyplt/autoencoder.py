@@ -1,12 +1,13 @@
 import tensorflow as tf
 
+from pyplt.plalgorithms.backprop_tf import ActivationType
+
 
 class Autoencoder:
     """Autoencoder class."""
 
-    def __init__(self, input_size, code_size, encoder_topology, decoder_topology,
+    def __init__(self, input_size, code_size, encoder_topology, decoder_topology, activation_functions=None,
                  learn_rate=0.001, error_threshold=0.001, epochs=10):
-        # TODO: [AUTOENCODER] add activation function parameter/s
         """Initialize the Autoencoder.
 
         :param input_size: the number of input features that will be fed into the network. This determines the number of
@@ -20,6 +21,10 @@ class Autoencoder:
         :param decoder_topology: specifies the number of neurons in each layer of the decoder part of the network,
             excluding the code layer and the output layer.
         :type decoder_topology: list of int
+        :param activation_functions: a list of the activation function to be used across the neurons
+            for each layer of the ANN (excluding input layer); if None, all layers will use the Logistic Sigmoid
+            function i.e. :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
+        :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
         :param learn_rate: the learning rate used in the weight update step of the algorithm (default 0.1).
         :type learn_rate: float, optional
         :param error_threshold: a threshold at or below which the error of a model is considered to be
@@ -41,8 +46,19 @@ class Autoencoder:
 
         # activation functions
         self._activation_fns = []
-        for _ in self._ann_topology:  # for each layer
-            self._activation_fns.append(tf.nn.relu)  # TODO: [AUTOENCODER] replace with activation function parameter/s
+        activation_fn_names = []
+
+        # convert activation function enums to actual tensorflow functions
+        # but keep ActivationType names (in activation_fn_names) for more readable printing
+        if activation_functions is None:
+            for _ in self._ann_topology:  # for each layer
+                self._activation_fns.append(tf.nn.relu)
+        else:
+            for act_fn in activation_functions:
+                if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name
+                    self._activation_fns.append(tf.nn.sigmoid)
+                    activation_fn_names.append(ActivationType.SIGMOID.name)
+                # TODO: do same for new activation functions
 
         print("AUTOENCODER activation functions:")
         print(self._activation_fns)

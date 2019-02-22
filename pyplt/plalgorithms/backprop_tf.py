@@ -71,7 +71,7 @@ class BackpropagationTF(PLAlgorithm):
         :type epochs: int, optional
         :param activation_functions: a list of the activation function to be used across the neurons
             for each layer of the ANN; if None, all layers will use the Logistic Sigmoid function i.e.
-            :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.SIGMOID` (default None).
+            :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.SIGMOID` (default None).  # TODO: change to relu
         :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
         :param debug: specifies whether or not to print notes to console for debugging (default False).
         :type debug: bool, optional
@@ -102,8 +102,9 @@ class BackpropagationTF(PLAlgorithm):
         self._activation_fns = []
         activation_fn_names = []
         if activation_functions is None:
-            self._activation_fns = [tf.nn.sigmoid]
-            activation_fn_names = [ActivationType.SIGMOID.name]
+            for _ in self._ann_topology:  # for each layer
+                self._activation_fns.append(tf.nn.sigmoid)  # TODO: change to relu
+                activation_fn_names.append(ActivationType.SIGMOID.name)
         else:
             for act_fn in activation_functions:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name

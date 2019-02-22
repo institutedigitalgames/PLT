@@ -28,7 +28,7 @@ from pyplt.evaluation.holdout import HoldOut
 from pyplt.exceptions import NoFeaturesError, NoRanksDerivedError, InvalidParameterValueException, \
     NormalizationValueError, IncompatibleFoldIndicesException, AutoencoderNormalizationValueError
 from pyplt.experiment import Experiment
-from pyplt.util.enums import NormalizationType
+from pyplt.util.enums import NormalizationType, ActivationType
 from pyplt.fsmethods.sfs import SFS
 from pyplt.gui.experiment.dataset.loading import DataLoadingTab
 from pyplt.util.enums import PLAlgo, FSMethod, EvaluatorType, KernelType
@@ -36,7 +36,7 @@ from pyplt.gui.experiment.progresswindow import ProgressWindow
 from pyplt.gui.util import colours, supported_methods
 from pyplt.gui.util.help import BeginnerStep1HelpDialog, BeginnerStep2HelpDialog, \
     BeginnerStep3HelpDialog, BeginnerStep4HelpDialog
-from pyplt.plalgorithms.backprop_tf import BackpropagationTF, ActivationType
+from pyplt.plalgorithms.backprop_tf import BackpropagationTF
 from pyplt.plalgorithms.ranksvm import RankSVM
 from pyplt.util import AbortFlag
 

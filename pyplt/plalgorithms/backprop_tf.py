@@ -15,24 +15,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
-from enum import Enum
 from matplotlib import pyplot as plt
 import tensorflow as tf
 import numpy as np
 import pandas as pd
 
 from pyplt import ROOT_PATH
-from pyplt.util.enums import PLAlgo
+from pyplt.util.enums import PLAlgo, ActivationType
 from pyplt.plalgorithms.base import PLAlgorithm
-
-
-class ActivationType(Enum):
-    """Class specifying enumerated constants for types of activation functions used by Backpropagation.
-
-    Extends `enum.Enum`.
-    """
-    # THRESHOLD = 0
-    SIGMOID = 1
 
 
 class BackpropagationTF(PLAlgorithm):

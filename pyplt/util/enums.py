@@ -101,3 +101,12 @@ class NormalizationType(Enum):
     # BINARY = 1
     MIN_MAX = 1
     Z_SCORE = 2
+
+
+class ActivationType(Enum):
+    """Class specifying enumerated constants for types of activation functions used by Backpropagation.
+
+    Extends `enum.Enum`.
+    """
+    # THRESHOLD = 0
+    SIGMOID = 1

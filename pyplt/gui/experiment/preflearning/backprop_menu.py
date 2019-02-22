@@ -20,8 +20,7 @@ from tkinter import ttk, font
 
 from pyplt import ROOT_PATH
 from pyplt.gui.util import colours
-from pyplt.util.enums import ParamType
-from pyplt.plalgorithms.backprop_tf import ActivationType
+from pyplt.util.enums import ParamType, ActivationType
 
 
 class BackpropMenu(tk.Frame):

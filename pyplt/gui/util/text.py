@@ -18,9 +18,8 @@
 
 from string import capwords
 
-from pyplt.util.enums import NormalizationType
+from pyplt.util.enums import NormalizationType, ActivationType
 from pyplt.util.enums import FSMethod, PLAlgo, KernelType
-from pyplt.plalgorithms.backprop_tf import ActivationType
 
 
 def real_type_name(type_name):

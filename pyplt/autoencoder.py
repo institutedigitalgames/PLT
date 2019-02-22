@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from pyplt.plalgorithms.backprop_tf import ActivationType
+from pyplt.util.enums import ActivationType
 
 
 class Autoencoder:

@@ -351,12 +351,38 @@ class PreprocHelpDialog(HelpDialog):
         tk.Label(self.main_frame, text="Preprocessing - Help", font=self.ebrima_h1,
                  bg=colours.HELP_BACKGROUND, fg='white').pack(pady=(20, 0))
 
-        tab_text_01 = "This tab allows you to pre-process your dataset in several ways: " \
+        tab_text_01 = "This tab allows you to pre-process your dataset in several ways: feature extraction, " \
                       "including/excluding features, feature normalization, and dataset shuffling.\n\n"
         #               "The pre-processing settings you choose will be reflected immediately " \
         #               "in the '"
         # tab_text_02 = "Data Preview"  # bold
         # tab_text_03 = "' area of the tab which provides a preview of your dataset.\n\n"
+
+        ae_heading = "Feature Extraction\n"
+        ae_text_01 = "If your dataset does not include predetermined features, you may choose to apply "
+        ae_text_02 = "automatic feature extraction (AFE)"  # bold
+        ae_text_03 = " by selecting the corresponding radiobutton at the top of the tab. AFE uses an "
+        ae_text_04 = "autoencoder"  # bold
+        ae_text_05 = " to extract features from your data. The autoencoder may also be considered a form of "
+        ae_text_06 = "dimensionality reduction or data compression"  # NOT bold
+        ae_text_07 = ". The autoencoder consists of two parts: the "
+        ae_text_08 = "encoder"  # bold
+        ae_text_09 = " and the "
+        ae_text_10 = "decoder"  # bold
+        ae_text_11 = ". The encoder compresses the input data whereas the decoder decompresses the " \
+                     "compressed version the data to create as accurate a reconstruction of the input as " \
+                     "possible. The layer in between the encoder and the decoder (i.e., the "
+        ae_text_12 = "code layer"  # bold
+        ae_text_13 = ") stores the compressed (encoded) version of the input. The topology of both the encoder and " \
+                     "the decoder (which are generally symmetrical) as well as the "
+        ae_text_14 = "code size"  # bold
+        ae_text_15 = " (i.e., the number of neurons in the code layer) are to be specified by the user. Each layer " \
+                     "in the encoder should be smaller (i.e., have less neurons) than the previous one, whereas each " \
+                     "layer in the decoder should be larger (i.e., have more neurons) than the previous one. The " \
+                     "learning rate, error threshold and epoch parameters of the backpropagation algorithm which " \
+                     "trains the autoencoder may also be specified by the user. The autoencoder is optimized using " \
+                     "the Adam Optimizer and its loss/performance is determined via the Mean Squared Error " \
+                     "function.\n\n"
 
         include_heading = "Including/Excluding Features\n"
         include_text_01 = "You may choose which features to include in or exclude out of the preference learning " \
@@ -396,6 +422,23 @@ class PreprocHelpDialog(HelpDialog):
         text_area.insert(tk.END, tab_text_01)
         # text_area.insert(tk.END, tab_text_02, "bold")
         # text_area.insert(tk.END, tab_text_03)
+
+        text_area.insert(tk.END, ae_heading, "heading")
+        text_area.insert(tk.END, ae_text_01)
+        text_area.insert(tk.END, ae_text_02, "bold")
+        text_area.insert(tk.END, ae_text_03)
+        text_area.insert(tk.END, ae_text_04, "bold")
+        text_area.insert(tk.END, ae_text_05)
+        text_area.insert(tk.END, ae_text_06)  # NOT bold
+        text_area.insert(tk.END, ae_text_07)
+        text_area.insert(tk.END, ae_text_08, "bold")
+        text_area.insert(tk.END, ae_text_09)
+        text_area.insert(tk.END, ae_text_10, "bold")
+        text_area.insert(tk.END, ae_text_11)
+        text_area.insert(tk.END, ae_text_12, "bold")
+        text_area.insert(tk.END, ae_text_13)
+        text_area.insert(tk.END, ae_text_14, "bold")
+        text_area.insert(tk.END, ae_text_15)
 
         text_area.insert(tk.END, include_heading, "heading")
         text_area.insert(tk.END, include_text_01)
@@ -942,6 +985,7 @@ class BeginnerStep1HelpDialog(HelpDialog):
         text_area.config(state='disabled')
 
 
+# TODO: add help info about automatic feature extraction (vs 'manual') & autoencoder in Beginner Menu!!!
 class BeginnerStep2HelpDialog(HelpDialog):
     """Help dialog window to assist the user in Step 2 of the BeginnerMenu.
 

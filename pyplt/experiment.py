@@ -143,7 +143,8 @@ class Experiment:
         self._features = features
         self._objects_have_id = True
         # (re) init norm_settings
-        self._norm_settings = dict.fromkeys(np.arange(len(self._features)).tolist(), NormalizationType.NONE.name)
+        self._norm_settings = dict.fromkeys(np.arange(len(self._features)-1).tolist(), NormalizationType.NONE.name)
+        # ^ -1 to account for ID column
 
     def load_rank_data(self, file_path, has_fnames=False, has_ids=False, separator=',', col_names=None,
                        na_filter=True):
@@ -272,7 +273,8 @@ class Experiment:
         self._features = features
         self._samples_have_id = True
         # (re) init norm_settings
-        self._norm_settings = dict.fromkeys(np.arange(len(self._features)).tolist(), NormalizationType.NONE.name)
+        self._norm_settings = dict.fromkeys(np.arange(len(self._features)-1).tolist(), NormalizationType.NONE.name)
+        # ^ -1 to account for ID column
 
     # Preprocessing
 

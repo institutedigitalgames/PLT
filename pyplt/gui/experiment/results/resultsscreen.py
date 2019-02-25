@@ -122,7 +122,7 @@ class ResultsWindow(tk.Toplevel):
         obj_path, ranks_path, single_path = data_info[2]
         f_include = preproc_info[0]  # dict
         f_norm = preproc_info[1]  # dict
-        n_feats = len(f_include)-1  # (ignore 'ID' column)
+        n_feats = len(f_include)  # no need for -1 as ID column not included
         fs_method = fs_info[0]
         fs_method_params = fs_info[1]
         sel_feats = fs_info[2]
@@ -357,8 +357,8 @@ class ResultsWindow(tk.Toplevel):
         f_norm_clean = dict()
         fi = 0
         for f in f_norm:
-            if fi > 0:  # ignore 'ID' column
-                f_norm_clean[f] = f_norm[f].get()  # get StringVar value
+            # no need to ignore 0 since ID column is not included
+            f_norm_clean[f] = f_norm[f].get()  # get StringVar value
             fi += 1
         self._exp._set_file_meta_data(obj_path, ranks_path, single_path, f_norm_clean)
 

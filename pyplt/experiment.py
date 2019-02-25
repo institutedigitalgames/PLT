@@ -58,6 +58,8 @@ class Experiment:
     _shuffle = None
     _random_seed = None
     _autoencoder = None
+    _autoencoder_loss = None
+    _autoencoder_details = None
 
     # Feature Selection
     _fs_method = None
@@ -556,7 +558,7 @@ class Experiment:
                 raise AutoencoderNormalizationValueError(norm_method=NormalizationType.MIN_MAX)
 
             # train encoder
-            self._autoencoder.train(samples)
+            self._autoencoder_loss = self._autoencoder.train(samples)
 
             # encode samples
             encoded_samples = np.array(self._autoencoder.encode(samples))
@@ -583,6 +585,13 @@ class Experiment:
 
             # do final clean up (close tf.Session)
             self._autoencoder.clean_up()
+
+            # store autoencoder details
+            self._autoencoder_details = {"Autoencoder-Topology": str(self._autoencoder.get_topology_incl_input()),
+                                         "Autoencoder-Code Size": str(self._autoencoder.get_code_size()),
+                                         "Autoencoder-Learning Rate": str(self._autoencoder.get_learn_rate()),
+                                         "Autoencoder-Error Threshold": str(self._autoencoder.get_error_thresh()),
+                                         "Autoencoder-Epochs": str(self._autoencoder.get_epochs())}
 
         # D0c. group everything up into single data variable
         if not self._is_dual_format:  # single file format
@@ -1049,13 +1058,27 @@ class Experiment:
         # FEATURES INCLUDED & PRE-PROCESSING
         ####################################
         # -- HORIZONTAL VERSION --
+        # autoencoder (yes/no + details)
+        header.append("Automatic Feature Extraction")
+        if self._autoencoder is None:
+            values.append("No")
+        else:
+            values.append("Yes")
+            # autoencoder loss
+            header.append("Autoencoder-Loss")
+            values.append(str(self._autoencoder_loss))
+            # autoencoder details
+            header.extend(list(self._autoencoder_details.keys()))
+            values.extend(list(self._autoencoder_details.values()))
+
         # original (included) features
         # normalization
-        norm_feat_names = [self._orig_feats[f] for f in range(len(self._orig_feats))
-                           if f in list(self._norm_settings.keys())]
+        norm_feat_names = [self._orig_feats[f] for f in range(len(self._orig_feats))]
         header.extend(["Original Included Features", "Normalization"])
         values.extend([str(norm_feat_names), str(list(self._norm_settings.values()))])
         # ^ for normalization, save dict values only !!!
+
+        # shuffle
         header.extend(["Shuffle", "Shuffle Seed"])
         shuffle = "No"
         random_seed = "N/A"
@@ -1063,6 +1086,7 @@ class Experiment:
             shuffle = "Yes"
             random_seed = str(self._random_seed)
         values.extend([shuffle, random_seed])
+
         # -- VERTICAL VERSION --
         # # original (included) features
         # log_file.append(["Original included features: ", self._orig_feats])
@@ -1498,6 +1522,32 @@ class Experiment:
         :rtype: :class:`pyplt.plalgorithms.base.PLAlgorithm`
         """
         return self._pl_algo
+
+    def get_orig_features(self):
+        """Get the original features used in the experiment.
+
+        If automatic feature extraction was enabled, this method will return the extracted features.
+
+        :return: the names of the features.
+        :rtype: list of str
+        """
+        return self._orig_feats
+
+    def get_autoencoder_loss(self):
+        """Get the training loss of the autoencoder used in the experiment (if applicable).
+
+        :return: the training loss.
+        :rtype: float or None
+        """
+        return self._autoencoder_loss
+
+    def get_autoencoder_details(self):
+        """Get the details of the autoencoder used in the experiment (if applicable).
+
+        :return: a dict containing the autoencoder parameter names as its keys and the parameter values as its values.
+        :rtype: dict or None
+        """
+        return self._autoencoder_details
 
     # Debugging methods
 

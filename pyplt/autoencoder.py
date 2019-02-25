@@ -143,6 +143,8 @@ class Autoencoder:
         """
         self._training_examples = training_examples
 
+        train_loss = float('inf')  # infinity
+
         with self._graph.as_default():
             sess = self._session
             # graph = tf.get_default_graph()
@@ -177,6 +179,8 @@ class Autoencoder:
                     break
 
                 print("AUTOENCODER epoch {} loss {}".format(epoch, train_loss))
+
+        return train_loss
 
     def predict(self, samples):
         """Run the given samples through the entire autoencoder.
@@ -216,6 +220,46 @@ class Autoencoder:
         :rtype: int
         """
         return self._code_size
+
+    def get_topology(self):
+        """Get the topology of the network.
+
+        :return: the topology.
+        :rtype: list of int
+        """
+        return self._ann_topology
+
+    def get_topology_incl_input(self):
+        """Get the topology of the network including the input layer.
+
+        :return: the topology including the input layer.
+        :rtype: list of int
+        """
+        return [self._num_inputs] + self._ann_topology
+
+    def get_learn_rate(self):
+        """Get the value of the learning rate parameter.
+
+        :return: the learning rate value.
+        :rtype: float
+        """
+        return self._learn_rate
+
+    def get_error_thresh(self):
+        """Get the value of the error threshold parameter.
+
+        :return: the error threshold value.
+        :rtype: float
+        """
+        return self._error_threshold
+
+    def get_epochs(self):
+        """Get the value of the epochs parameter.
+
+        :return: the epochs value.
+        :rtype: int
+        """
+        return self._num_epochs
 
     def clean_up(self):
         """Close the `tensorflow` session once the algorithm class instance is no longer needed.

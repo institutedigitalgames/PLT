@@ -137,6 +137,10 @@ class ResultsWindow(tk.Toplevel):
         s_time, e_time, duration = time_info
         shuffle, random_seed = shuffle_info
 
+        orig_feats = experiment.get_orig_features()
+        autoencoder_loss = experiment.get_autoencoder_loss()
+        autoencoder_details = experiment.get_autoencoder_details()
+
         self._pl_algo = self._exp.get_pl_algorithm()  # get the actual algorithm PLAlgo object
 
         #############
@@ -184,7 +188,7 @@ class ResultsWindow(tk.Toplevel):
         data_other_sub_frame.pack()
         tk.Label(data_other_sub_frame, text="Number of objects/samples:").grid(row=0, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_obj)).grid(row=0, column=1, sticky='e')
-        tk.Label(data_other_sub_frame, text="Number of original features:").grid(row=1, column=0, sticky='w')
+        tk.Label(data_other_sub_frame, text="Number of original/extracted features:").grid(row=1, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_feats)).grid(row=1, column=1, sticky='e')
         tk.Label(data_other_sub_frame, text="Number of ranks/preferences:").grid(row=2, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_ranks)).grid(row=2, column=1, sticky='e')
@@ -192,13 +196,44 @@ class ResultsWindow(tk.Toplevel):
         ####################################
         # FEATURES INCLUDED & PRE-PROCESSING
         ####################################
-
         preproc_frame = tk.Frame(self._results_sub_frame, bd=2, relief='groove', padx=50, pady=5)
         preproc_frame.grid(row=2, column=0, pady=5, sticky='ew')
         tk.Label(preproc_frame, text="Features Included & Pre-processing",
                  justify='center', font='Ebrima 14 bold').pack()
+
+        # autoencoder
+        ae_frame = tk.Frame(preproc_frame)
+        ae_frame.pack(pady=(5, 0))
+
+        ae_applied = "No"
+        if autoencoder_details is not None:
+            ae_applied = "Yes"
+        tk.Label(ae_frame, text="Automatic feature extraction enabled?").grid(row=0, column=0, sticky='e', padx=(0, 5))
+        tk.Label(ae_frame, text=str(ae_applied)).grid(row=0, column=1, sticky='w', padx=(5, 0))
+        if autoencoder_details is not None:
+            # loss
+            tk.Label(ae_frame, text="Autoencoder Mean Squared Error loss:").grid(row=1, column=0, sticky='e',
+                                                                                 padx=(0, 5))
+            tk.Label(ae_frame, text=str(autoencoder_loss)).grid(row=1, column=1, sticky='w', padx=(5, 0))
+            ae_frame.grid_columnconfigure(0, weight=1)
+            ae_frame.grid_columnconfigure(1, weight=1)
+            # details
+            tk.Label(preproc_frame, text="Autoencoder Parameters:", font='Ebrima 10 italic').pack()
+            ae_params_frame = tk.Frame(preproc_frame)
+            ae_params_frame.pack()
+            col = 0
+            for key, value in autoencoder_details.items():
+                key = str(key).replace("Autoencoder-", "")  # remove prefix
+                tk.Label(ae_params_frame, text=key).grid(row=col, column=0, sticky='e', padx=(0, 5))
+                tk.Label(ae_params_frame, text=str(value)).grid(row=col, column=1, sticky='w', padx=(5, 0))
+                ae_params_frame.grid_columnconfigure(col, weight=1)
+                col += 1
+
+        ttk.Separator(preproc_frame, orient=tk.HORIZONTAL).pack(fill=tk.BOTH, expand=True, pady=5)
+
+        # included features & normalization
         pf = tk.Frame(preproc_frame)
-        pf.pack(pady=(5, 0))
+        pf.pack()
         r = 0
         tk.Label(pf, text="Feature", font='Ebrima 11 normal').grid(row=r, column=0, sticky='w', padx=(0, 5))
         tk.Label(pf, text="Normalization", font='Ebrima 11 normal').grid(row=r, column=1, padx=(5, 0))
@@ -206,11 +241,12 @@ class ResultsWindow(tk.Toplevel):
             r += 1
             # no need to skip first row as ID is excluded in f_include and f_norm
             if f_include[f].get():  # only if feature included (==True)
-                tk.Label(pf, text=str(f)).grid(row=r, column=0, sticky='w')  # TODO: need orig_feats[f] here for label
+                tk.Label(pf, text=str(orig_feats[f])).grid(row=r, column=0, sticky='w')
                 tk.Label(pf, text=text.real_type_name(str(f_norm[f].get()))).grid(row=r, column=1)
 
         ttk.Separator(preproc_frame, orient=tk.HORIZONTAL).pack(fill=tk.BOTH, expand=True, pady=5)
 
+        # shuffle & random seed
         shuffle_frame = tk.Frame(preproc_frame)
         shuffle_frame.pack()
         shuffle_applied = "No"

@@ -801,7 +801,7 @@ class PLFrame(tk.Frame):
         # get the features selected by fs (if applicable)
         sel_feats = exp.get_features()
 
-        preproc_info = [self._preproc_tab.get_include_settings(),  # TODO: change from f_names to f_ids in result screen
+        preproc_info = [self._preproc_tab.get_include_settings(),
                         self._preproc_tab.get_norm_settings()]
 
         pw.put("DONE")

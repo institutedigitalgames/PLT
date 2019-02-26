@@ -621,6 +621,307 @@ class AutoencoderSettings(tk.Frame):
         self._o_neurons.configure(state='disabled')
 
 
+class AutoencoderSettingsBeginner(tk.Frame):
+    """Tkinter Frame widget for setting up an autoencoder and a basic subset of its parameters in the Beginner mode."""
+
+    def __init__(self, parent, input_size, on_resize_fn):
+        self._parent = parent
+        tk.Frame.__init__(self, self._parent)
+
+        # SET UP VARIABLES (set to default values):
+
+        # - input layer variables
+        self._input_size = input_size
+
+        # - encoder variables
+        self._gui_encoder_layer_rows = []
+        self._num_encoder_hidden_layers = 0
+
+        # - code layer variables
+        self._code_size = tk.IntVar()  # no default value bc depends on input size...
+
+        # - decoder variables (mirror encoder)
+        self._gui_decoder_layer_rows = []
+        self._num_decoder_hidden_layers = 0
+
+        # - output layer variables
+        self._output_size = self._input_size
+
+        # - total / general variables
+        self._hidden_neurons = dict()
+
+        # - presentation variables
+        self._on_resize_fn = on_resize_fn
+
+        # for validation:
+        self._vcmd = (self.register(self._on_validate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+
+        #################
+        # ANN params menu
+        #################
+
+        self._main_canvas = tk.Canvas(self, bg=colours.PL_INNER)
+        self._main_frame = tk.Frame(self._main_canvas, bg=colours.PL_INNER)
+
+        # main gui
+        topology_frame = tk.Frame(self._main_frame, bg=colours.PL_INNER)
+        topology_frame.pack()
+
+        self._encoder_frame = tk.Frame(topology_frame, bd=2, relief=tk.GROOVE, padx=5, pady=5, bg=colours.PL_INNER)
+        self._encoder_frame.grid(row=0, column=0)
+
+        code_frame = tk.Frame(topology_frame, padx=5, pady=5, bg=colours.PL_INNER)
+        code_frame.grid(row=0, column=1)
+
+        self._decoder_frame = tk.Frame(topology_frame, bd=2, relief=tk.GROOVE, padx=5, pady=5, bg=colours.PL_INNER)
+        self._decoder_frame.grid(row=0, column=2)
+
+        buttons_frame = tk.Frame(self._main_frame, pady=10, bg=colours.PL_INNER)
+        buttons_frame.pack()
+
+        # Buttons to Add/Remove hidden layers
+        self._add_img = tk.PhotoImage(file=os.path.join(ROOT_PATH, "assets/buttons/add_layer_128_30_01_dark_blue.png"))
+        self._remove_img = tk.PhotoImage(file=os.path.join(ROOT_PATH,
+                                                           "assets/buttons/remove_layer_128_30_01_dark_blue.png"))
+        add_btn = tk.Button(buttons_frame, image=self._add_img, relief='flat', bd=0,
+                            highlightbackground=colours.PL_INNER, highlightcolor=colours.PL_INNER,
+                            highlightthickness=0, background=colours.PL_INNER, activebackground=colours.PL_INNER,
+                            command=self._add_hidden_layer)
+        add_btn.pack(side=tk.LEFT, padx=5)
+        remove_btn = tk.Button(buttons_frame, image=self._remove_img, relief='flat', bd=0,
+                               highlightbackground=colours.PL_INNER, highlightcolor=colours.PL_INNER,
+                               highlightthickness=0, background=colours.PL_INNER, activebackground=colours.PL_INNER,
+                               command=self._del_hidden_layer)
+        remove_btn.pack(side=tk.RIGHT, padx=5)
+
+        # ---------------------------------------- ENCODER ----------------------------------------
+
+        # input layer
+
+        self._i_neurons = ttk.Entry(self._encoder_frame, width=5, style='PL.PLT.TEntry', justify='center')
+        self._i_neurons.insert(0, str(self._input_size))
+        self._i_neurons.grid(row=0, column=0, padx=5)
+        tk.Label(self._encoder_frame, text="Input", bg=colours.PL_INNER,
+                 font='Ebrima 8 normal').grid(row=1, column=0, sticky='ew', pady=(5, 0), padx=5)
+        self._i_neurons.configure(state='disabled')  # disable the input layer  # TODO: keep disabled always
+        self._encoder_frame.grid_columnconfigure(0, weight=1)  # make all columns equal size
+
+        # hidden layers
+
+        # self._add_entry_param(self._encoder_frame, "Hidden", tk.StringVar(value=5), self._num_encoder_hidden_layers+1,
+        #                       ParamType.INT.name)
+
+        # ---------------------------------------- CODE LAYER ----------------------------------------
+
+        self._c_neurons = ttk.Entry(code_frame, textvariable=self._code_size, width=5, justify='center',
+                                    validate="all", validatecommand=self._vcmd + (ParamType.INT.name,),
+                                    style='PL.PLT.TEntry')
+        self._c_neurons.grid(row=0, column=0, padx=5)
+        tk.Label(code_frame, text="Code", bg=colours.PL_INNER,
+                 font='Ebrima 8 bold').grid(row=1, column=0, sticky='ew', pady=(5, 0), padx=5)
+        code_frame.grid_columnconfigure(0, weight=1)  # make all columns equal size
+
+        # ---------------------------------------- DECODER ----------------------------------------
+
+        # hidden layers
+
+        # self._add_entry_param(self._decoder_frame, "Hidden", tk.StringVar(value=5), self._num_decoder_hidden_layers,
+        #                       ParamType.INT.name)
+
+        # output layer
+
+        self._o_neurons = ttk.Entry(self._decoder_frame, width=5, style='PL.PLT.TEntry', justify='center')
+        self._o_neurons.insert(0, str(self._output_size))
+        self._o_neurons.grid(row=0, column=self._num_decoder_hidden_layers+1, padx=5)
+        o_label = tk.Label(self._decoder_frame, text="Output", bg=colours.PL_INNER, font='Ebrima 8 normal')
+        o_label.grid(row=1, column=self._num_decoder_hidden_layers+1, sticky='ew', pady=(5, 0), padx=5)
+        self._decoder_frame.grid_columnconfigure(0, weight=1)  # make all columns equal size
+        self._o_neurons.configure(state='disabled')  # disable the output layer  # TODO: keep disabled always
+        self._gui_decoder_layer_rows.append((self._o_neurons, o_label))
+
+        # horizontal scrollbar
+        h_scroll = ttk.Scrollbar(self, orient="horizontal", command=self._main_canvas.xview,
+                                 style="PLT.Horizontal.TScrollbar")  # self._results_frame
+        h_scroll.pack(side='bottom', fill='x')
+        self._main_canvas.configure(xscrollcommand=h_scroll.set)
+
+        # pack everything
+        self._main_frame.pack(fill=tk.BOTH, expand=True)
+        self._main_canvas.pack()  # expand=True, fill=tk.X
+
+        self.c_win = self._main_canvas.create_window((0, 0), window=self._main_frame, anchor='nw')
+
+        self._main_canvas.config(scrollregion=self._main_canvas.bbox("all"))
+
+        self._main_frame.bind('<Configure>', self._on_canvas_config)
+
+    def _on_canvas_config(self, event):
+        """Update the canvas `scrollregion` to account for the entire area of the :attr:`self._main_sub_frame` widget.
+
+        This method is bound to all <Configure> events with respect to :attr:`self._main_sub_frame`.
+
+        :param event: the <Configure> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # print("__ on_config called __ ")
+        # configure canvas size (to a certain point)
+        frame_width = self._main_frame.winfo_width()
+        print("frame_width: " + str(frame_width))
+        frame_height = self._main_frame.winfo_height()
+        print("frame_height: " + str(frame_height))
+        if frame_width < 560:
+            self._main_canvas.configure(width=frame_width, height=frame_height)
+        # configure canvas scrollregion
+        self._main_canvas.configure(scrollregion=(0, 0, self._main_frame.winfo_reqwidth(),
+                                                  self._main_frame.winfo_reqheight()))
+
+    def _add_hidden_layer(self):
+        self._hidden_neurons[self._num_encoder_hidden_layers] = tk.StringVar(value=5)
+        # add layer in encoder frame
+        e_entry, e_label = self._add_entry_param(self._encoder_frame, "Hidden",
+                                                 self._hidden_neurons[self._num_encoder_hidden_layers],
+                                                 self._num_encoder_hidden_layers+1,  # +1 to skip input layer
+                                                 ParamType.INT.name)
+        self._gui_encoder_layer_rows.append((e_entry, e_label))
+        # move all layers in decoder frame one step to the right
+        c = 0
+        for entry, label in self._gui_decoder_layer_rows:
+            entry.grid_forget()
+            label.grid_forget()
+            entry.grid(row=0, column=self._num_decoder_hidden_layers+1-c, sticky='ew', pady=(5, 0), padx=5)
+            label.grid(row=1, column=self._num_decoder_hidden_layers+1-c, sticky='ew', pady=(5, 0), padx=5)
+            # ^ +1 for both to account for new mirror layer at the front!
+            c += 1
+        # add disabled mirror layer in decoder frame
+        d_entry, d_label = self._add_entry_param(self._decoder_frame, "Hidden",
+                                                 self._hidden_neurons[self._num_encoder_hidden_layers],
+                                                 0,  # always add at the front (to mirror encoder)
+                                                 ParamType.INT.name)
+        d_entry.configure(state='disabled')  # disable the new decoder mirror layer  # TODO: keep disabled always
+        self._gui_decoder_layer_rows.append((d_entry, d_label))
+        # increment counter variables
+        self._num_encoder_hidden_layers += 1
+        self._num_decoder_hidden_layers += 1
+
+    def _del_hidden_layer(self):
+        if self._num_encoder_hidden_layers > 0:
+            # remove entry and label in encoder frame
+            for element in self._gui_encoder_layer_rows[self._num_encoder_hidden_layers-1]:
+                element.destroy()
+            # remove entry in self._gui_encoder_layer_rows for that layer
+            del self._gui_encoder_layer_rows[self._num_encoder_hidden_layers-1]
+            # remove entry and label in decoder frame
+            for element in self._gui_decoder_layer_rows[self._num_decoder_hidden_layers]:
+                # ^ no need to -1 since this one includes output layer
+                element.destroy()
+            # remove entry in self._gui_decoder_layer_rows for that layer
+            del self._gui_decoder_layer_rows[self._num_decoder_hidden_layers]
+            # ^ no need to -1 since this one includes output layer
+            # delete tkinter StringVar (only one as it is shared between both encoder and decoder)
+            del self._hidden_neurons[self._num_encoder_hidden_layers-1]
+            # decrement counter variables
+            self._num_encoder_hidden_layers -= 1
+            self._num_decoder_hidden_layers -= 1
+
+    def set_input_size(self, input_size):
+        """Set the value of the input size parameter.
+
+        :param input_size: the new input size value.
+        :type input_size: int
+        """
+        # set variables
+        self._input_size = input_size
+        self._output_size = input_size
+        # enable entry widgets
+        self._i_neurons.configure(state='normal')
+        self._o_neurons.configure(state='normal')
+        # delete/clear entry text
+        self._i_neurons.delete(0, 'end')
+        self._o_neurons.delete(0, 'end')
+        # insert entry text
+        self._i_neurons.insert(0, str(self._input_size))
+        self._o_neurons.insert(0, str(self._output_size))
+        # re-disable entry widgets
+        self._i_neurons.configure(state='disabled')
+        self._o_neurons.configure(state='disabled')
+
+    def _add_entry_param(self, parent, name, var, col, val_type):
+        """Generic method for adding parameter labels and text entries to the GUI menu.
+
+        The method constructs a `ttk.Entry` widget preceded by a `tkinter.Label` widget displaying the
+        given parameter name.
+
+        :param parent: the parent widget of these widgets.
+        :type parent: `tkinter widget`
+        :param name: the name of the parameter to be used as the label of the text entry widget.
+        :type name: str
+        :param var: the variable in which the parameter value entered by the user is to be stored.
+        :type var: `tkinter.StringVar` or `tkinter.IntVar` or `tkinter.DoubleVar` or `tkinter.BooleanVar`
+        :param col: the index of the column in the parent widget's grid layout where these widgets are to be drawn.
+        :type col: int
+        :param val_type: specifies the type of validation to carry out on the value/s entered by the user in the
+            text entry widget for the given parameter.
+        :type val_type: :class:`pyplt.util.enums.ParamType`
+        """
+        entry = ttk.Entry(parent, width=5, textvariable=var, justify='center',
+                          validate="all", validatecommand=self._vcmd + (val_type,), style='PL.PLT.TEntry')
+        entry.grid(row=0, column=col, padx=5)
+        label = tk.Label(parent, text=str(name), bg=colours.PL_INNER,
+                         font='Ebrima 8 normal')
+        label.grid(row=1, column=col, sticky='ew', pady=(5, 0), padx=5)
+        parent.grid_columnconfigure(col, weight=1)  # make all columns equal size
+        parent.after_idle(lambda: entry.config(validate='all'))
+        # ^ re-enables validation after using .set() with the Vars to initialize them with default values
+        return entry, label
+
+    def _on_validate(self, action, index, value_if_allowed,
+                     prior_value, text, validation_type, trigger_type, widget_name, val_type):
+        """Validate the text input by the user in a `ttk.Entry` widget.
+
+        All but the last of the method arguments refer to callback substitution codes describing the type of
+        change made to the text of the `ttk.Entry widget`. Their description is based on existing documentation at
+        http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/entry-validation.html.
+
+        :param action: Action code: 0 for an attempted deletion, 1 for an attempted insertion, or -1 if the
+            callback was called for focus in, focus out, or a change to the textvariable.
+        :param index: When the user attempts to insert or delete text, this argument will be the index of the
+            beginning of the insertion or deletion. If the callback was due to focus in, focus out, or a change to
+            the textvariable, the argument will be -1.
+        :param value_if_allowed: The value that the text will have if the change is allowed.
+        :param prior_value: The text in the entry before the change.
+        :param text: If the call was due to an insertion or deletion, this argument will be the text being
+            inserted or deleted.
+        :param validation_type: The current value of the widget's validate option.
+        :param trigger_type: The reason for this callback: one of 'focusin', 'focusout', 'key', or 'forced' if
+            the textvariable was changed.
+        :param widget_name: The name of the widget.
+        :param val_type: specifies the type of validation to carry out on the value/s entered by the user in the
+            text entry widget for the given parameter.
+        :type val_type: :class:`pyplt.util.enums.ParamType`
+        :return: a boolean specifying whether the text is valid (True) or not (False).
+        :rtype: bool
+        """
+        # print("Validating... " + val_type)
+        # print(prior_value)
+        # print(text)
+        # print(value_if_allowed)
+        if ParamType[val_type] == ParamType.FLOAT:
+            try:
+                float(text)
+                return True
+            except ValueError:
+                try:
+                    float(value_if_allowed)
+                    return True
+                except ValueError:
+                    return False
+        else:
+            if text.isnumeric():
+                return True
+            else:
+                return False
+
+
 # test it...
 # root = tk.Tk()
 # root.style = ThemedStyle(root)  # Like other Tkinter classes, a Style can take a master argument
@@ -648,7 +949,7 @@ class AutoencoderSettings(tk.Frame):
 # # configure ttk styles
 # styles.configure_styles(root.style)
 #
-# gui = AutoencoderSettings(root, 784, None)
+# gui = AutoencoderSettingsBeginner(root, 784, None)
 # gui.pack()
 #
 # root.mainloop()

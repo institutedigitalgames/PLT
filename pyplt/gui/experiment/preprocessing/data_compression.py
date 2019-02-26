@@ -123,7 +123,8 @@ class AutoencoderSettings(tk.Frame):
         # are re-disabled or re-enabled accordingly on close of stacked windows (help dialog or load params).
         # solution via binding state changes to method which ensures re-disable (or re-enable if appropriate time/case).
         # finally, add carefully-designed fake third column to align with the other hidden layers
-        tk.Label(ann_input_layer_frame, bg=colours.PL_INNER, width=12, anchor=tk.E).grid(row=0, column=2, padx=(0, 3))
+        tk.Label(ann_input_layer_frame, bg=colours.PL_INNER, width=9, anchor=tk.E).grid(row=0, column=2)
+        # ^ mimics optionmenu with RELU selected
 
         # Hidden layers
         self._encoder_hidden_layers_frame = tk.Frame(encoder_frame, bg=colours.PL_INNER)

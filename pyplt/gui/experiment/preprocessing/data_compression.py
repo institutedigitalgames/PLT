@@ -626,12 +626,12 @@ class AutoencoderSettingsBeginner(tk.Frame):
 
     def __init__(self, parent, input_size, on_resize_fn):
         self._parent = parent
-        tk.Frame.__init__(self, self._parent)
+        tk.Frame.__init__(self, self._parent, bd=2, relief=tk.GROOVE)
 
         # SET UP VARIABLES (set to default values):
 
         # - input layer variables
-        self._input_size = input_size
+        self._input_size = tk.IntVar(value=input_size)
 
         # - encoder variables
         self._gui_encoder_layer_rows = []
@@ -645,7 +645,6 @@ class AutoencoderSettingsBeginner(tk.Frame):
         self._num_decoder_hidden_layers = 0
 
         # - output layer variables
-        self._output_size = self._input_size
 
         # - total / general variables
         self._hidden_neurons = dict()
@@ -698,18 +697,15 @@ class AutoencoderSettingsBeginner(tk.Frame):
 
         # input layer
 
-        self._i_neurons = ttk.Entry(self._encoder_frame, width=5, style='PL.PLT.TEntry', justify='center')
-        self._i_neurons.insert(0, str(self._input_size))
+        self._i_neurons = ttk.Entry(self._encoder_frame, textvariable=self._input_size,
+                                    width=5, style='PL.PLT.TEntry', justify='center')
+        # self._i_neurons.insert(0, str(self._input_size))
         self._i_neurons.grid(row=0, column=0, padx=5)
         tk.Label(self._encoder_frame, text="Input", bg=colours.PL_INNER,
                  font='Ebrima 8 normal').grid(row=1, column=0, sticky='ew', pady=(5, 0), padx=5)
-        self._i_neurons.configure(state='disabled')  # disable the input layer  # TODO: keep disabled always
+        self._i_neurons.configure(state='disabled')  # disable the input layer
+        self._i_neurons.bind("<<PLTStateToggle>>", self._check_i_neurons_entry)  # bind
         self._encoder_frame.grid_columnconfigure(0, weight=1)  # make all columns equal size
-
-        # hidden layers
-
-        # self._add_entry_param(self._encoder_frame, "Hidden", tk.StringVar(value=5), self._num_encoder_hidden_layers+1,
-        #                       ParamType.INT.name)
 
         # ---------------------------------------- CODE LAYER ----------------------------------------
 
@@ -723,20 +719,17 @@ class AutoencoderSettingsBeginner(tk.Frame):
 
         # ---------------------------------------- DECODER ----------------------------------------
 
-        # hidden layers
-
-        # self._add_entry_param(self._decoder_frame, "Hidden", tk.StringVar(value=5), self._num_decoder_hidden_layers,
-        #                       ParamType.INT.name)
-
         # output layer
 
-        self._o_neurons = ttk.Entry(self._decoder_frame, width=5, style='PL.PLT.TEntry', justify='center')
-        self._o_neurons.insert(0, str(self._output_size))
+        self._o_neurons = ttk.Entry(self._decoder_frame, textvariable=self._input_size,
+                                    width=5, style='PL.PLT.TEntry', justify='center')
+        # self._o_neurons.insert(0, str(self._output_size))
         self._o_neurons.grid(row=0, column=self._num_decoder_hidden_layers+1, padx=5)
         o_label = tk.Label(self._decoder_frame, text="Output", bg=colours.PL_INNER, font='Ebrima 8 normal')
         o_label.grid(row=1, column=self._num_decoder_hidden_layers+1, sticky='ew', pady=(5, 0), padx=5)
         self._decoder_frame.grid_columnconfigure(0, weight=1)  # make all columns equal size
-        self._o_neurons.configure(state='disabled')  # disable the output layer  # TODO: keep disabled always
+        self._o_neurons.configure(state='disabled')  # disable the output layer
+        self._o_neurons.bind("<<PLTStateToggle>>", self._check_o_neurons_entry)  # bind
         self._gui_decoder_layer_rows.append((self._o_neurons, o_label))
 
         # horizontal scrollbar
@@ -747,7 +740,7 @@ class AutoencoderSettingsBeginner(tk.Frame):
 
         # pack everything
         self._main_frame.pack(fill=tk.BOTH, expand=True)
-        self._main_canvas.pack()  # expand=True, fill=tk.X
+        self._main_canvas.pack(padx=10, pady=(5, 0))  # expand=True, fill=tk.X
 
         self.c_win = self._main_canvas.create_window((0, 0), window=self._main_frame, anchor='nw')
 
@@ -766,9 +759,9 @@ class AutoencoderSettingsBeginner(tk.Frame):
         # print("__ on_config called __ ")
         # configure canvas size (to a certain point)
         frame_width = self._main_frame.winfo_width()
-        print("frame_width: " + str(frame_width))
+        # print("frame_width: " + str(frame_width))
         frame_height = self._main_frame.winfo_height()
-        print("frame_height: " + str(frame_height))
+        # print("frame_height: " + str(frame_height))
         if frame_width < 560:
             self._main_canvas.configure(width=frame_width, height=frame_height)
         # configure canvas scrollregion
@@ -776,7 +769,8 @@ class AutoencoderSettingsBeginner(tk.Frame):
                                                   self._main_frame.winfo_reqheight()))
 
     def _add_hidden_layer(self):
-        self._hidden_neurons[self._num_encoder_hidden_layers] = tk.StringVar(value=5)
+        """Add a new hidden layer entry in the network topology area of the GUI menu."""
+        self._hidden_neurons[self._num_encoder_hidden_layers] = tk.IntVar(value=5)
         # add layer in encoder frame
         e_entry, e_label = self._add_entry_param(self._encoder_frame, "Hidden",
                                                  self._hidden_neurons[self._num_encoder_hidden_layers],
@@ -788,7 +782,7 @@ class AutoencoderSettingsBeginner(tk.Frame):
         for entry, label in self._gui_decoder_layer_rows:
             entry.grid_forget()
             label.grid_forget()
-            entry.grid(row=0, column=self._num_decoder_hidden_layers+1-c, sticky='ew', pady=(5, 0), padx=5)
+            entry.grid(row=0, column=self._num_decoder_hidden_layers+1-c, padx=5)
             label.grid(row=1, column=self._num_decoder_hidden_layers+1-c, sticky='ew', pady=(5, 0), padx=5)
             # ^ +1 for both to account for new mirror layer at the front!
             c += 1
@@ -804,6 +798,7 @@ class AutoencoderSettingsBeginner(tk.Frame):
         self._num_decoder_hidden_layers += 1
 
     def _del_hidden_layer(self):
+        """Remove the last hidden layer entry from the network topology area of the GUI menu."""
         if self._num_encoder_hidden_layers > 0:
             # remove entry and label in encoder frame
             for element in self._gui_encoder_layer_rows[self._num_encoder_hidden_layers-1]:
@@ -817,7 +812,7 @@ class AutoencoderSettingsBeginner(tk.Frame):
             # remove entry in self._gui_decoder_layer_rows for that layer
             del self._gui_decoder_layer_rows[self._num_decoder_hidden_layers]
             # ^ no need to -1 since this one includes output layer
-            # delete tkinter StringVar (only one as it is shared between both encoder and decoder)
+            # delete tkinter IntVar (only one as it is shared between both encoder and decoder)
             del self._hidden_neurons[self._num_encoder_hidden_layers-1]
             # decrement counter variables
             self._num_encoder_hidden_layers -= 1
@@ -829,21 +824,82 @@ class AutoencoderSettingsBeginner(tk.Frame):
         :param input_size: the new input size value.
         :type input_size: int
         """
-        # set variables
-        self._input_size = input_size
-        self._output_size = input_size
-        # enable entry widgets
-        self._i_neurons.configure(state='normal')
-        self._o_neurons.configure(state='normal')
-        # delete/clear entry text
-        self._i_neurons.delete(0, 'end')
-        self._o_neurons.delete(0, 'end')
-        # insert entry text
-        self._i_neurons.insert(0, str(self._input_size))
-        self._o_neurons.insert(0, str(self._output_size))
-        # re-disable entry widgets
-        self._i_neurons.configure(state='disabled')
-        self._o_neurons.configure(state='disabled')
+        self._input_size.set(input_size)
+
+    def _check_o_neurons_entry(self, event):
+        """Ensure that the output neurons `tkinter.Entry` widget remains disabled when a change in its
+        state is detected.
+
+        :param event: the <<PLTStateToggle>> event that triggered the call to this method.
+        :type event: `tkinter Event`
+        """
+        new_state = str(self._o_neurons.cget('state'))
+        # print("new_state: " + str(new_state))
+        if (new_state == 'disable') or (new_state == 'disabled'):
+            # print("Output neurons Entry state was changed (disabled)! -- ignoring...")
+            return
+        # print("Output neurons Entry state was changed (activated)!")
+        # ALWAYS re-disable Output neurons Entry!
+        # print("Setting back to disabled - as always.")
+        self._o_neurons.configure(state='disable')  # set back to disabled
+        # ^ n.b. state name does not always apply - check for specific widget!
+
+    def _check_i_neurons_entry(self, event):
+        """Ensure that the input neurons `tkinter.Entry` widget remains disabled when a change in its
+        state is detected.
+
+        :param event: the <<PLTStateToggle>> event that triggered the call to this method.
+        :type event: `tkinter Event`
+        """
+        new_state = str(self._i_neurons.cget('state'))
+        # print("new_state: " + str(new_state))
+        if (new_state == 'disable') or (new_state == 'disabled'):
+            # print("Input neurons Entry state was changed (disabled)! -- ignoring...")
+            return
+        # print("Input neurons Entry state was changed (activated)!")
+        # ALWAYS re-disable Input neurons Entry!
+        # print("Setting back to disabled - as always.")
+        self._i_neurons.configure(state='disable')  # set back to disabled
+        # ^ n.b. state name does not always apply - check for specific widget!
+
+    def get_input_size(self):
+        """Get the input size of the autoencoder.
+
+        :return: input size.
+        :rtype: int
+        """
+        return self._input_size.get()
+
+    def get_code_size(self):
+        """Get the value of the code size parameter as specified by the user via the GUI.
+
+        Returns 0 if the code size Entry widget is empty.
+
+        :return: the code size value.
+        :rtype: int
+        """
+        try:
+            return self._code_size.get()
+        except tk.TclError:  # i.e., code size tkinter Entry is empty
+            return 0
+
+    def get_encoder_neurons(self):
+        """Get the number of neurons in each layer in the encoder as specified by the user via the GUI.
+
+        :return: list containing the number of neurons in each layer in the encoder.
+        :rtype: list of int
+        """
+        return [layer.get() for layer in self._hidden_neurons.values()]
+
+    def get_decoder_neurons(self):
+        """Get the number of neurons in each layer in the decoder as specified by the user via the GUI.
+
+        The topology of the decoder simply mirrors that of the encoder.
+
+        :return: list containing the number of neurons in each layer in the decoder.
+        :rtype: list of int
+        """
+        return list(reversed(self.get_encoder_neurons()))
 
     def _add_entry_param(self, parent, name, var, col, val_type):
         """Generic method for adding parameter labels and text entries to the GUI menu.

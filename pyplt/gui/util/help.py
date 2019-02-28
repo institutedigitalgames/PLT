@@ -985,14 +985,13 @@ class BeginnerStep1HelpDialog(HelpDialog):
         text_area.config(state='disabled')
 
 
-# TODO: add help info about automatic feature extraction (vs 'manual') & autoencoder in Beginner Menu!!!
 class BeginnerStep2HelpDialog(HelpDialog):
-    """Help dialog window to assist the user in Step 2 of the BeginnerMenu.
+    """Help dialog window to assist the user in Step 3 of the BeginnerMenu.
 
     Extends :class:`pyplt.gui.util.help.HelpDialog`.
     """
     def __init__(self, parent_window):
-        """Initializes the window widget with the help text for Step 2 of the BeginnerMenu.
+        """Initializes the window widget with the help text for Step 3 of the BeginnerMenu.
 
         :param parent_window: the window which this window widget will be stacked on top of.
         :type parent_window: `tkinter.Toplevel`
@@ -1011,41 +1010,53 @@ class BeginnerStep2HelpDialog(HelpDialog):
         tk.Label(self.main_frame, text="Beginner Mode - Help", font=self.ebrima_h1,
                  bg=colours.HELP_BACKGROUND, fg='white').pack(pady=(20, 0))
 
-        step2_heading = "Step 2: Feature Selection\n"
-
-        step2_tab_text = "This step allows you to apply a feature selection method (optional) which automatically " \
-                         "finds the most relevant subset of input features for preference models derived from " \
-                         "your data. PLT uses the Sequential Forward Selection method.\n\n"
-
-        sfs_heading = "Sequential Forward Selection (SFS)\n"  # heading
-        sfs_text_01 = "SFS is a bottom-up hill-climbing algorithm where one feature is added at a time to the " \
-                      "current feature set. The feature to be added is selected from the subset of the remaining " \
-                      "features such that the new feature set generates the maximum value of the performance " \
-                      "function over all candidate features for addition. The selection procedure begins with an " \
-                      "empty feature set and terminates when an added feature yields equal or lower " \
-                      "performance to the performance obtained without it. The performance of each subset of " \
-                      "features considered is computed as the prediction accuracy of a model trained using " \
-                      "that subset of features as input. In the Beginner Mode, the "
-        sfs_text_02 = "RankSVM"  # bold
-        sfs_text_03 = " preference learning algorithm is used to train this model using a linear kernel function " \
-                      "(see Preference Learning section for more detail on the algorithm). Furthermore, the model " \
-                      "is tested for the generality of its results by using "
-        sfs_text_04 = "Holdout"  # bold
-        sfs_text_05 = " validation. This means that the model is trained on a proportion of the " \
-                      "dataset (70% in the Beginner Mode) and then tested on the remaining proportion " \
-                      "of the dataset (30%).\n\n"
+        step2_heading = "Step 2: Preprocessing\n"
+        ae_text_01 = "If your dataset does not include predetermined features, you may choose to apply "
+        ae_text_02 = "automatic feature extraction (AFE)"  # bold
+        ae_text_03 = " in this step. AFE uses an "
+        ae_text_04 = "autoencoder"  # bold
+        ae_text_05 = " to extract features from your data. The autoencoder may also be considered a form of "
+        ae_text_06 = "dimensionality reduction or data compression"  # NOT bold
+        ae_text_07 = ". The autoencoder consists of two parts: the "
+        ae_text_08 = "encoder"  # bold
+        ae_text_09 = " and the "
+        ae_text_10 = "decoder"  # bold
+        ae_text_11 = ". The encoder compresses the input data whereas the decoder decompresses the " \
+                     "compressed version the data to create as accurate a reconstruction of the input as " \
+                     "possible. The layer in between the encoder and the decoder (i.e., the "
+        ae_text_12 = "code layer"  # bold
+        ae_text_13 = ") stores the compressed (encoded) version of the input. The topology (i.e., the number " \
+                     "of neurons in each layer) of both the encoder and " \
+                     "the decoder (which are symmetrical) as well as the "
+        ae_text_14 = "code size"  # bold
+        ae_text_15 = " (i.e., the number of neurons in the code layer) are to be specified by the user. Each layer " \
+                     "in the encoder should be smaller (i.e., have less neurons) than the previous one, whereas each " \
+                     "layer in the decoder should be larger (i.e., have more neurons) than the previous one. The " \
+                     "learning rate and error threshold parameters of the backpropagation algorithm which " \
+                     "trains the autoencoder are both set to 0.001 by default and the algorithm iterates over " \
+                     "10 epochs by default. The autoencoder is optimized using " \
+                     "the Adam Optimizer and its loss/performance is determined via the Mean Squared Error " \
+                     "function.\n\n"
 
         text_area.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
         # insert text
         text_area.insert(tk.END, step2_heading, "heading")
-        text_area.insert(tk.END, step2_tab_text)
-        text_area.insert(tk.END, sfs_heading, "heading2")
-        text_area.insert(tk.END, sfs_text_01)
-        text_area.insert(tk.END, sfs_text_02, "bold")
-        text_area.insert(tk.END, sfs_text_03)
-        text_area.insert(tk.END, sfs_text_04, "bold")
-        text_area.insert(tk.END, sfs_text_05)
+        text_area.insert(tk.END, ae_text_01)
+        text_area.insert(tk.END, ae_text_02, "bold")
+        text_area.insert(tk.END, ae_text_03)
+        text_area.insert(tk.END, ae_text_04, "bold")
+        text_area.insert(tk.END, ae_text_05)
+        text_area.insert(tk.END, ae_text_06)  # NOT bold
+        text_area.insert(tk.END, ae_text_07)
+        text_area.insert(tk.END, ae_text_08, "bold")
+        text_area.insert(tk.END, ae_text_09)
+        text_area.insert(tk.END, ae_text_10, "bold")
+        text_area.insert(tk.END, ae_text_11)
+        text_area.insert(tk.END, ae_text_12, "bold")
+        text_area.insert(tk.END, ae_text_13)
+        text_area.insert(tk.END, ae_text_14, "bold")
+        text_area.insert(tk.END, ae_text_15)
 
         # make headings actual headings
         text_area.tag_config("heading", font=self.ebrima_h1)
@@ -1081,7 +1092,77 @@ class BeginnerStep3HelpDialog(HelpDialog):
         tk.Label(self.main_frame, text="Beginner Mode - Help", font=self.ebrima_h1,
                  bg=colours.HELP_BACKGROUND, fg='white').pack(pady=(20, 0))
 
-        step3_heading = "Step 3: Preference Learning\n"
+        step3_heading = "Step 3: Feature Selection\n"
+
+        step3_tab_text = "This step allows you to apply a feature selection method (optional) which automatically " \
+                         "finds the most relevant subset of input features for preference models derived from " \
+                         "your data. PLT uses the Sequential Forward Selection method.\n\n"
+
+        sfs_heading = "Sequential Forward Selection (SFS)\n"  # heading
+        sfs_text_01 = "SFS is a bottom-up hill-climbing algorithm where one feature is added at a time to the " \
+                      "current feature set. The feature to be added is selected from the subset of the remaining " \
+                      "features such that the new feature set generates the maximum value of the performance " \
+                      "function over all candidate features for addition. The selection procedure begins with an " \
+                      "empty feature set and terminates when an added feature yields equal or lower " \
+                      "performance to the performance obtained without it. The performance of each subset of " \
+                      "features considered is computed as the prediction accuracy of a model trained using " \
+                      "that subset of features as input. In the Beginner Mode, the "
+        sfs_text_02 = "RankSVM"  # bold
+        sfs_text_03 = " preference learning algorithm is used to train this model using a linear kernel function " \
+                      "(see Preference Learning section for more detail on the algorithm). Furthermore, the model " \
+                      "is tested for the generality of its results by using "
+        sfs_text_04 = "Holdout"  # bold
+        sfs_text_05 = " validation. This means that the model is trained on a proportion of the " \
+                      "dataset (70% in the Beginner Mode) and then tested on the remaining proportion " \
+                      "of the dataset (30%).\n\n"
+
+        text_area.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
+
+        # insert text
+        text_area.insert(tk.END, step3_heading, "heading")
+        text_area.insert(tk.END, step3_tab_text)
+        text_area.insert(tk.END, sfs_heading, "heading2")
+        text_area.insert(tk.END, sfs_text_01)
+        text_area.insert(tk.END, sfs_text_02, "bold")
+        text_area.insert(tk.END, sfs_text_03)
+        text_area.insert(tk.END, sfs_text_04, "bold")
+        text_area.insert(tk.END, sfs_text_05)
+
+        # make headings actual headings
+        text_area.tag_config("heading", font=self.ebrima_h1)
+        text_area.tag_config("heading2", font=self.ebrima_h2)
+        text_area.tag_config("bold", font=self.ebrima_bold)
+
+        # once text is inserted, set widget to readonly
+        text_area.config(state='disabled')
+
+
+class BeginnerStep4HelpDialog(HelpDialog):
+    """Help dialog window to assist the user in Step 4 of the BeginnerMenu.
+
+    Extends :class:`pyplt.gui.util.help.HelpDialog`.
+    """
+    def __init__(self, parent_window):
+        """Initializes the window widget with the help text for Step 4 of the BeginnerMenu.
+
+        :param parent_window: the window which this window widget will be stacked on top of.
+        :type parent_window: `tkinter.Toplevel`
+        """
+        # call super init method
+        HelpDialog.__init__(self, parent_window)
+
+        text_area = tk.Text(self.main_frame, bd=0, bg=colours.BACKGROUND, selectbackground=colours.BACKGROUND,
+                            cursor='arrow', wrap=tk.WORD, height=14, padx=20, pady=20)
+
+        # add scrollbar
+        self._v_scroll.config(command=text_area.yview)
+        self._v_scroll.pack(side='right', fill='y')
+        text_area.configure(yscrollcommand=self._v_scroll.set)
+
+        tk.Label(self.main_frame, text="Beginner Mode - Help", font=self.ebrima_h1,
+                 bg=colours.HELP_BACKGROUND, fg='white').pack(pady=(20, 0))
+
+        step3_heading = "Step 4: Preference Learning\n"
 
         step3_tab_text = "This step allows you to choose which preference learning algorithm will be used to infer " \
                          "the final preference model from your data. PLT offers the following preference learning " \
@@ -1173,13 +1254,13 @@ class BeginnerStep3HelpDialog(HelpDialog):
         text_area.config(state='disabled')
 
 
-class BeginnerStep4HelpDialog(HelpDialog):
-    """Help dialog window to assist the user in Step 4 of the BeginnerMenu.
+class BeginnerStep5HelpDialog(HelpDialog):
+    """Help dialog window to assist the user in Step 5 of the BeginnerMenu.
 
     Extends :class:`pyplt.gui.util.help.HelpDialog`.
     """
     def __init__(self, parent_window):
-        """Initializes the window widget with the help text for Step 4 of the BeginnerMenu.
+        """Initializes the window widget with the help text for Step 5 of the BeginnerMenu.
 
         :param parent_window: the window which this window widget will be stacked on top of.
         :type parent_window: `tkinter.Toplevel`
@@ -1198,7 +1279,7 @@ class BeginnerStep4HelpDialog(HelpDialog):
         tk.Label(self.main_frame, text="Beginner Mode - Help", font=self.ebrima_h1,
                  bg=colours.HELP_BACKGROUND, fg='white').pack(pady=(20, 0))
 
-        step4_heading = "Step 4: Execution and Results\n"
+        step4_heading = "Step 5: Execution and Results\n"
 
         run_text_01 = "With the algorithm configured, pressing the "
         run_text_02 = "Run Experiment"  # bold

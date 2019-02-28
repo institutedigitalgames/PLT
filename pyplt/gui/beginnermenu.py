@@ -21,13 +21,16 @@ from threading import Thread
 from queue import Queue
 import os
 import numpy as np
+import platform
 
 from pyplt import ROOT_PATH
 import pyplt.gui.util.windowstacking as ws
+from pyplt.autoencoder import Autoencoder
 from pyplt.evaluation.holdout import HoldOut
 from pyplt.exceptions import NoFeaturesError, NoRanksDerivedError, InvalidParameterValueException, \
     NormalizationValueError, IncompatibleFoldIndicesException, AutoencoderNormalizationValueError
 from pyplt.experiment import Experiment
+from pyplt.gui.experiment.preprocessing.data_compression import AutoencoderSettingsBeginner
 from pyplt.util.enums import NormalizationType, ActivationType
 from pyplt.fsmethods.sfs import SFS
 from pyplt.gui.experiment.dataset.loading import DataLoadingTab
@@ -35,7 +38,7 @@ from pyplt.util.enums import PLAlgo, FSMethod, EvaluatorType, KernelType
 from pyplt.gui.experiment.progresswindow import ProgressWindow
 from pyplt.gui.util import colours, supported_methods
 from pyplt.gui.util.help import BeginnerStep1HelpDialog, BeginnerStep2HelpDialog, \
-    BeginnerStep3HelpDialog, BeginnerStep4HelpDialog
+    BeginnerStep3HelpDialog, BeginnerStep4HelpDialog, BeginnerStep5HelpDialog
 from pyplt.plalgorithms.backprop_tf import BackpropagationTF
 from pyplt.plalgorithms.ranksvm import RankSVM
 from pyplt.util import AbortFlag
@@ -54,6 +57,8 @@ class BeginnerMenu(tk.Toplevel):
         :type parent: `tkinter.Toplevel`
         """
         self._apply_fs = tk.BooleanVar(value=False)
+        self._apply_ae = tk.BooleanVar(value=False)
+        self._autoencoder_menu = None
         self._algorithm = tk.StringVar(value=PLAlgo.RANKSVM.name)
         self._include_settings = {}
         self._norm_settings = {}
@@ -68,8 +73,19 @@ class BeginnerMenu(tk.Toplevel):
 
         self.title("Experiment Setup (Beginner)")
 
-        self._main_frame = tk.Frame(self)
-        self._main_frame.pack()
+        # self._main_frame = tk.Frame(self)
+        # self._main_frame.pack()
+
+        self._OS = platform.system()
+
+        self._main_canvas = tk.Canvas(self, width=500, height=500)  # , background='yellow'
+        self._main_canvas.bind("<Configure>", self._on_resize)
+        self._main_canvas.bind('<Enter>', self._bind_mousewheel)
+        self._main_canvas.bind('<Leave>', self._unbind_mousewheel)
+        self._canvas_width = self._main_canvas.winfo_reqwidth()
+        self._canvas_height = self._main_canvas.winfo_reqheight()
+        self._main_sub_frame = tk.Frame(self._main_canvas)  # , background='green'
+        self._main_sub_sub_frame = tk.Frame(self._main_sub_frame)
 
         ebrima_big = font.Font(family='Ebrima', size=12, weight=font.BOLD)
         # ebrima_small = font.Font(family='Ebrima', size=10, weight=font.NORMAL)
@@ -79,7 +95,7 @@ class BeginnerMenu(tk.Toplevel):
 
         # 1. LOAD DATA
 
-        self._data_frame = tk.Frame(self._main_frame, bd=2, relief='groove')
+        self._data_frame = tk.Frame(self._main_sub_sub_frame, bd=2, relief='groove')
         self._data_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         title_frame = tk.Frame(self._data_frame, bg=colours.NAV_BAR)
         title_frame.pack(side=tk.TOP, fill=tk.X)
@@ -93,19 +109,45 @@ class BeginnerMenu(tk.Toplevel):
         self._load_frame = DataLoadingTab(self._data_frame, self)
         self._load_frame.pack(side=tk.BOTTOM)
 
-        # 2. FEATURE SELECTION
+        # 2. PREPROCESSING -- FEATURE EXTRACTION
 
-        self._others_frame = tk.Frame(self._main_frame)
+        self._others_frame = tk.Frame(self._main_sub_sub_frame)
         self._others_frame.pack(fill=tk.BOTH, expand=True)
+
+        self._ae_frame = tk.Frame(self._others_frame, bd=2, relief='groove')
+        self._ae_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+
+        title_frame = tk.Frame(self._ae_frame, bg=colours.NAV_BAR)
+        title_frame.pack(side=tk.TOP, fill=tk.X)
+        tk.Label(title_frame, text="Step 2: Preprocessing", font=ebrima_big, fg='white',
+                 bg=colours.NAV_BAR).pack(padx=10, pady=5, side=tk.LEFT)
+        help_btn = tk.Button(title_frame, command=lambda s=2: self._help_dialog(s), image=self._help_img,
+                             relief='flat', bd=0, highlightbackground=colours.NAV_BAR,
+                             highlightcolor=colours.NAV_BAR, highlightthickness=0, background=colours.NAV_BAR,
+                             activebackground=colours.NAV_BAR)
+        help_btn.pack(padx=10, pady=5, side=tk.RIGHT)
+
+        self._sub_ae_frame = tk.Frame(self._ae_frame)
+        self._sub_ae_frame.pack(pady=10, side=tk.BOTTOM)
+
+        self._sub_sub_ae_frame = tk.Frame(self._sub_ae_frame)
+        self._sub_sub_ae_frame.pack()
+
+        tk.Label(self._sub_sub_ae_frame, text="Enable Automatic Feature Extraction?").grid(row=0, column=0)
+        ttk.Checkbutton(self._sub_sub_ae_frame, variable=self._apply_ae, onvalue=True, offvalue=False,
+                        style="PLT.TCheckbutton").grid(row=0, column=1, padx=(10, 0))
+        self._apply_ae.trace('w', self._toggle_autoencoder_menu)
+
+        # 3. FEATURE SELECTION
 
         self._fs_frame = tk.Frame(self._others_frame, bd=2, relief='groove')
         self._fs_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
         title_frame = tk.Frame(self._fs_frame, bg=colours.NAV_BAR)
         title_frame.pack(side=tk.TOP, fill=tk.X)
-        tk.Label(title_frame, text="Step 2: Feature Selection", font=ebrima_big, fg='white',
+        tk.Label(title_frame, text="Step 3: Feature Selection", font=ebrima_big, fg='white',
                  bg=colours.NAV_BAR).pack(padx=10, pady=5, side=tk.LEFT)
-        help_btn = tk.Button(title_frame, command=lambda s=2: self._help_dialog(s), image=self._help_img,
+        help_btn = tk.Button(title_frame, command=lambda s=3: self._help_dialog(s), image=self._help_img,
                              relief='flat', bd=0, highlightbackground=colours.NAV_BAR,
                              highlightcolor=colours.NAV_BAR, highlightthickness=0, background=colours.NAV_BAR,
                              activebackground=colours.NAV_BAR)
@@ -118,16 +160,16 @@ class BeginnerMenu(tk.Toplevel):
         ttk.Checkbutton(sub_fs_frame, variable=self._apply_fs, onvalue=True, offvalue=False,
                         style="PLT.TCheckbutton").grid(row=0, column=1, padx=(10, 0))
 
-        # 3. PREFERENCE LEARNING
+        # 4. PREFERENCE LEARNING
 
         self._pl_frame = tk.Frame(self._others_frame, bd=2, relief='groove')
         self._pl_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
         title_frame = tk.Frame(self._pl_frame, bg=colours.NAV_BAR)
         title_frame.pack(side=tk.TOP, fill=tk.X)
-        tk.Label(title_frame, text="Step 3: Preference Learning", font=ebrima_big, fg='white',
+        tk.Label(title_frame, text="Step 4: Preference Learning", font=ebrima_big, fg='white',
                  bg=colours.NAV_BAR).pack(padx=10, pady=5, side=tk.LEFT)
-        help_btn = tk.Button(title_frame, command=lambda s=3: self._help_dialog(s), image=self._help_img,
+        help_btn = tk.Button(title_frame, command=lambda s=4: self._help_dialog(s), image=self._help_img,
                              relief='flat', bd=0, highlightbackground=colours.NAV_BAR,
                              highlightcolor=colours.NAV_BAR, highlightthickness=0, background=colours.NAV_BAR,
                              activebackground=colours.NAV_BAR)
@@ -142,16 +184,16 @@ class BeginnerMenu(tk.Toplevel):
         algo_menu.grid(row=0, column=1, padx=(10, 10))
         algo_menu["menu"].config(bg="#e6e6e6")
 
-        # 4. RUN EXPERIMENT
+        # 5. RUN EXPERIMENT
 
         self._run_frame = tk.Frame(self._others_frame, bd=2, relief='groove')
         self._run_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
         title_frame = tk.Frame(self._run_frame, bg=colours.NAV_BAR)
         title_frame.pack(side=tk.TOP, fill=tk.X)
-        tk.Label(title_frame, text="Step 4: Run Experiment", font=ebrima_big, fg='white',
+        tk.Label(title_frame, text="Step 5: Run Experiment", font=ebrima_big, fg='white',
                  bg=colours.NAV_BAR).pack(padx=10, pady=5, side=tk.LEFT)
-        help_btn = tk.Button(title_frame, command=lambda s=4: self._help_dialog(s), image=self._help_img,
+        help_btn = tk.Button(title_frame, command=lambda s=5: self._help_dialog(s), image=self._help_img,
                              relief='flat', bd=0, highlightbackground=colours.NAV_BAR,
                              highlightcolor=colours.NAV_BAR, highlightthickness=0, background=colours.NAV_BAR,
                              activebackground=colours.NAV_BAR)
@@ -174,6 +216,38 @@ class BeginnerMenu(tk.Toplevel):
 
         ws.place_window(self, parent, position=ws.SIDE)
 
+        # add scrollbars
+        v_scroll = ttk.Scrollbar(self, orient="vertical", command=self._main_canvas.yview,
+                                 style="PLT.Vertical.TScrollbar")  # self._results_frame
+        v_scroll.pack(side='right', fill='y')
+        self._main_canvas.configure(yscrollcommand=v_scroll.set)
+        h_scroll = ttk.Scrollbar(self, orient="horizontal", command=self._main_canvas.xview,
+                                 style="PLT.Horizontal.TScrollbar")  # self._results_frame
+        h_scroll.pack(side='bottom', fill='x')
+        self._main_canvas.configure(xscrollcommand=h_scroll.set)
+
+        # pack everything
+        self._main_sub_sub_frame.pack()
+        self._main_sub_frame.pack(fill=tk.BOTH, expand=True)  # useless line... doesn't work here it seems
+        self._main_canvas.pack(side='left', expand=True, fill=tk.BOTH)
+
+        self.c_win = self._main_canvas.create_window((0, 0), window=self._main_sub_frame, anchor='nw')
+        self._main_canvas.config(scrollregion=self._main_canvas.bbox("all"))
+
+        self._main_sub_frame.bind('<Configure>', self._on_canvas_config)
+
+    def _on_canvas_config(self, event):
+        """Update the canvas `scrollregion` to account for the entire area of the :attr:`self._main_sub_frame` widget.
+
+        This method is bound to all <Configure> events with respect to :attr:`self._main_sub_frame`.
+
+        :param event: the <Configure> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # print("__ on_config called __ ")
+        self._main_canvas.configure(scrollregion=(0, 0, self._main_sub_frame.winfo_reqwidth(),
+                                                  self._main_sub_frame.winfo_reqheight()))
+
     def _help_dialog(self, step):
         """Open a help dialog window to assist the user in the given step of the BeginnerMenu.
 
@@ -188,9 +262,11 @@ class BeginnerMenu(tk.Toplevel):
             BeginnerStep3HelpDialog(self)
         elif step == 4:
             BeginnerStep4HelpDialog(self)
+        elif step == 5:
+            BeginnerStep5HelpDialog(self)
 
     def _toggle_lock(self, event):
-        """Unlock widgets for Steps 2-4 when a complete data set is loaded; keep them locked (disabled) otherwise.
+        """Unlock widgets for Steps 2-5 when a complete data set is loaded; keep them locked (disabled) otherwise.
 
         This method is called every time a <Configure> event occurs with respect to the data
         loading frame widget of Step 1 (i.e., :meth:`self._load_frame`).
@@ -208,6 +284,16 @@ class BeginnerMenu(tk.Toplevel):
                 # print("Unlocking all widgets in other frame...")
                 ws._toggle_state(self._others_frame, None, 'normal')  # enable all widgets in other frame
                 self._others_locked = False
+            # update autoencoder menu input size and output size each time new data has been loaded
+            if self._autoencoder_menu is not None:
+                data = self._load_frame.get_data()
+                if isinstance(data, tuple):
+                    objects, ranks = data
+                    input_size = len(objects.columns) - 1  # -1 to account for ID column
+                else:
+                    input_size = len(data.columns) - 2  # -2 to account for ID column and ratings column
+                # print("updating autoencoder input_size !!! " + str(input_size))
+                self._autoencoder_menu.set_input_size(input_size)
         else:
             # print("Full data is NOT loaded.")
             # always lock since closing LoadingParamsWindow enables all widgets in this window (due to window stacking)
@@ -216,10 +302,10 @@ class BeginnerMenu(tk.Toplevel):
             self._others_locked = True
 
     def _check_lock(self, event):
-        """Unlock widgets for Steps 2-4 when a complete data set is loaded; keeps them locked (disabled) otherwise.
+        """Unlock widgets for Steps 2-5 when a complete data set is loaded; keeps them locked (disabled) otherwise.
 
         This method is called every time a <<PLTStateToggle>> event occurs with respect to the 'Run Experiment' button
-        widget of Step 4 (i.e., self._run_btn).
+        widget of Step 5 (i.e., self._run_btn).
 
         Widgets are 'locked' by setting their state to 'disable' and 'unlocked' by setting their state to 'normal'.
 
@@ -244,6 +330,27 @@ class BeginnerMenu(tk.Toplevel):
             # print("Re-Locking all widgets in other frame...")
             ws._toggle_state(self._others_frame, None, 'disable')  # disable all widgets in other frame
         # print("done.")
+
+    def _toggle_autoencoder_menu(self, *args):
+        """Show or hide topology section of autoencoder menu.
+
+        :param args: additional arguments for when the method is called as a callback function
+            via the tk.IntVar.trace method.
+        """
+        if self._apply_ae.get():
+            if self._autoencoder_menu is None:
+                data = self._load_frame.get_data()
+                if isinstance(data, tuple):
+                    objects, ranks = data
+                    input_size = len(objects.columns)-1  # -1 to account for ID column
+                else:
+                    input_size = len(data.columns)-2  # -2 to account for ID column and ratings column
+                self._autoencoder_menu = AutoencoderSettingsBeginner(self._sub_ae_frame, input_size, self._on_resize)
+                self._autoencoder_menu.pack(padx=5, pady=5)
+            else:
+                self._autoencoder_menu.pack(padx=5, pady=5)
+        else:
+            self._autoencoder_menu.pack_forget()
 
     def _run_exp(self):
         """Trigger the execution of the experiment in a separate thread from the main (GUI) thread.
@@ -273,15 +380,38 @@ class BeginnerMenu(tk.Toplevel):
             # ^ has_ids=True bc _load_data() adds ID column if there isn't already
             self._exp.set_rank_derivation_params(mdm=mdm, memory=memory)
 
+        if self._apply_ae.get():
+            # set autoencoder
+            input_size = self._autoencoder_menu.get_input_size()
+            code_size = self._autoencoder_menu.get_code_size()
+            code_actf = ActivationType.RELU
+            encoder_top = self._autoencoder_menu.get_encoder_neurons()
+            print("AUTOENCODER encoder topology: " + str(encoder_top))
+            encoder_actf = [ActivationType.RELU for _ in encoder_top]
+            decoder_top = self._autoencoder_menu.get_decoder_neurons()
+            print("AUTOENCODER decoder topology: " + str(decoder_top))
+            decoder_actf = [ActivationType.RELU for _ in decoder_top]
+            output_actf = ActivationType.RELU
+            activation_functions = encoder_actf + [code_actf] + decoder_actf + [output_actf]
+            print("AUTOENCODER activation_functions: " + str(activation_functions))
+            lr = 0.001
+            error_thresh = 0.001
+            e = 10
+            ae = Autoencoder(input_size, code_size, encoder_top, decoder_top, activation_functions, lr, error_thresh, e)
+            self._exp.set_autoencoder(ae)
+
         # Normalize all feature values to the range [0,1] via the Min-Max method
-        n_cols = len(objects.columns)
+        if self._apply_ae.get():
+            n_cols = self._autoencoder_menu.get_code_size()
+        else:
+            n_cols = len(objects.columns)-1
         col_ids = np.arange(n_cols)
-        col_names = objects.columns
-        for c_id in col_ids:  # just for debugging purposes...
-            print("Setting normalization for feature " + str(c_id) + "/" + str(col_names[c_id]))
-        self._exp.set_normalization(col_ids[:-1], NormalizationType.MIN_MAX)
-        # ^ (min_val=0, max_val=1 by default)
         # ^ remove last id to avoid out of range exception since col_ids includes ID col
+
+        for c_id in col_ids:  # just for debugging purposes...
+            print("Setting normalization for feature " + str(c_id))
+        self._exp.set_normalization(list(col_ids), NormalizationType.MIN_MAX)
+        # ^ (min_val=0, max_val=1 by default)
         # don't forget to convert norm_settings values to tk.StringVars in order to work with ResultsWindow!!
         self._norm_settings = {c: tk.StringVar(value=NormalizationType.MIN_MAX.name) for c in col_ids}
         # also in the process, list all features as included in the experiment
@@ -495,3 +625,73 @@ class BeginnerMenu(tk.Toplevel):
                 eval_metrics=eval_metrics,
                 fold_metrics=fold_metrics,
                 shuffle_info=[shuffle, random_state])
+
+    def _on_resize(self, event):
+        """Resize the canvas widget according to the user's specification via the mouse.
+
+        This method is called whenever a <Configure> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Configure> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # print("_on_resize() has been called!")
+        if event is not None:  # otherwise use latest values of self._canvas_width and self._canvas_height
+            # for forcing updates for canvas/scrollbars
+            self._canvas_width = event.width
+            self._canvas_height = event.height
+        # print("event/canvas width = " + str(self._canvas_width))
+        # print("event/canvas height = " + str(self._canvas_height))
+        try:
+            if self._canvas_width > self._main_sub_frame.winfo_reqwidth():
+                self._main_canvas.itemconfig(self.c_win, width=self._canvas_width)
+            else:
+                self._main_canvas.itemconfig(self.c_win, width=self._main_sub_frame.winfo_reqwidth())
+            if self._canvas_height > self._main_sub_frame.winfo_reqheight():
+                self._main_canvas.itemconfig(self.c_win, height=self._canvas_height)
+            else:
+                self._main_canvas.itemconfig(self.c_win, height=self._main_sub_frame.winfo_reqheight())
+        except AttributeError:
+            print("Canvas contents have not been drawn yet.")
+
+    def _bind_mousewheel(self, event):
+        """Bind all mouse wheel events with respect to the canvas to a canvas-scrolling function.
+
+        This method is called whenever an <Enter> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Enter> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # for Windows OS and MacOS
+        self._main_canvas.bind_all("<MouseWheel>", self._on_mouse_scroll)
+        # for Linux OS
+        self._main_canvas.bind_all("<Button-4>", self._on_mouse_scroll)
+        self._main_canvas.bind_all("<Button-5>", self._on_mouse_scroll)
+
+    def _unbind_mousewheel(self, event):
+        """Unbind all mouse wheel events with respect to the canvas from any function.
+
+        This method is called whenever a <Leave> event occurs with respect to :attr:`self._main_canvas`.
+
+        :param event: the <Leave> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # for Windows OS and MacOS
+        self._main_canvas.unbind_all("<MouseWheel>")
+        # for Linux OS
+        self._main_canvas.unbind_all("<Button-4>")
+        self._main_canvas.unbind_all("<Button-5>")
+
+    def _on_mouse_scroll(self, event):
+        """Vertically scroll through the canvas by an amount derived from the given <MouseWheel> event.
+
+        :param event: the <MouseWheel> event that triggered the method call.
+        :type event: `tkinter Event`
+        """
+        # print("Scrolling RESULTS SCREEN........................")
+        if self._OS == 'Linux':
+            if event.num == 4:
+                self._main_canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                self._main_canvas.yview_scroll(1, "units")
+        else:
+            self._main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")

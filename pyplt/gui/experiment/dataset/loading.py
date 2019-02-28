@@ -316,7 +316,6 @@ class DataLoadingTab(tk.Frame):
         :rtype: `pandas.DataFrame`
         """
         data = self._load_data(FileType.OBJECTS)
-        self.event_generate("<<FileChange>>")
         if data is not None:  # to make sure it wasn't cancelled
             objects = data
             features = list(objects.columns)
@@ -347,6 +346,7 @@ class DataLoadingTab(tk.Frame):
             self._data = None
             self._ranks = None
             self._objects = data  # or objects (same)
+            self.event_generate("<<FileChange>>")
 
     def _load_ranks(self):
         """Attempt to load a ranks file as specified by the user and carries out validation checks.
@@ -369,7 +369,6 @@ class DataLoadingTab(tk.Frame):
             return  # automatically skips the rest of the method...
 
         data = self._load_data(FileType.RANKS)
-        self.event_generate("<<FileChange>>")
         if data is not None:  # to make sure it wasn't cancelled
 
             ranks = data
@@ -397,6 +396,7 @@ class DataLoadingTab(tk.Frame):
             # only when all validation checks are passed, set actual variables!
             self._ranks = data
             self._was_data_loaded = True
+            self.event_generate("<<FileChange>>")
 
     def _load_single(self):
         """Attempt to load a single file as specified by the user and carries out validation checks.
@@ -410,7 +410,6 @@ class DataLoadingTab(tk.Frame):
         :rtype: type of `pandas.DataFrame` (size 2)
         """
         data = self._load_data(FileType.SINGLE)
-        self.event_generate("<<FileChange>>")
 
         # Check for None because NoneType is not iterable and will give an error
         if data is not None:  # to make sure it wasn't cancelled
@@ -441,6 +440,7 @@ class DataLoadingTab(tk.Frame):
             self._ranks = None
             self._data = data  # or objects, ranks (same)
             self._was_data_loaded = True
+            self.event_generate("<<FileChange>>")
 
     def is_data_loaded(self):
         """Check if a full data set has been loaded.

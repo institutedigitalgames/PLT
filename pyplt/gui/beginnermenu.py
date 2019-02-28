@@ -294,6 +294,9 @@ class BeginnerMenu(tk.Toplevel):
                     input_size = len(data.columns) - 2  # -2 to account for ID column and ratings column
                 # print("updating autoencoder input_size !!! " + str(input_size))
                 self._autoencoder_menu.set_input_size(input_size)
+            # resize to show everything properly (file paths)
+            self.update_idletasks()
+            self._on_resize(None)
         else:
             # print("Full data is NOT loaded.")
             # always lock since closing LoadingParamsWindow enables all widgets in this window (due to window stacking)
@@ -351,6 +354,10 @@ class BeginnerMenu(tk.Toplevel):
                 self._autoencoder_menu.pack(padx=5, pady=5)
         else:
             self._autoencoder_menu.pack_forget()
+
+        # resize to show everything properly
+        self.update_idletasks()
+        self._on_resize(None)
 
     def _run_exp(self):
         """Trigger the execution of the experiment in a separate thread from the main (GUI) thread.

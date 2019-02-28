@@ -283,9 +283,9 @@ class BeginnerMenu(tk.Toplevel):
         # ^ (min_val=0, max_val=1 by default)
         # ^ remove last id to avoid out of range exception since col_ids includes ID col
         # don't forget to convert norm_settings values to tk.StringVars in order to work with ResultsWindow!!
-        self._norm_settings = {c: tk.StringVar(value=NormalizationType.MIN_MAX.name) for c in col_names}
+        self._norm_settings = {c: tk.StringVar(value=NormalizationType.MIN_MAX.name) for c in col_ids}
         # also in the process, list all features as included in the experiment
-        self._include_settings = {c: tk.BooleanVar(value=True) for c in col_names}
+        self._include_settings = {c: tk.BooleanVar(value=True) for c in col_ids}
 
         # fixed shuffle settings
         shuffle = False
@@ -469,7 +469,7 @@ class BeginnerMenu(tk.Toplevel):
         # get the features selected by fs (if applicable)
         sel_feats = exp.get_features()
 
-        preproc_info = [self._include_settings,  # TODO: change from f_names to f_ids in result screen
+        preproc_info = [self._include_settings,
                         self._norm_settings]
 
         pw.put("DONE")

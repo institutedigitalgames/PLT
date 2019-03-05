@@ -1023,21 +1023,11 @@ class BeginnerStep2HelpDialog(HelpDialog):
         ae_text_04 = "autoencoder"  # bold
         ae_text_05 = " to extract features from your data. The autoencoder may also be considered a form of "
         ae_text_06 = "dimensionality reduction or data compression"  # NOT bold
-        ae_text_07 = ". The autoencoder consists of two parts: the "
-        ae_text_08 = "encoder"  # bold
-        ae_text_09 = " and the "
-        ae_text_10 = "decoder"  # bold
-        ae_text_11 = ". The encoder compresses the input data whereas the decoder decompresses the " \
-                     "compressed version the data to create as accurate a reconstruction of the input as " \
-                     "possible. The layer in between the encoder and the decoder (i.e., the "
-        ae_text_12 = "code layer"  # bold
-        ae_text_13 = ") stores the compressed (encoded) version of the input. The topology (i.e., the number " \
-                     "of neurons in each layer) of both the encoder and " \
-                     "the decoder (which are symmetrical) as well as the "
-        ae_text_14 = "code size"  # bold
-        ae_text_15 = " (i.e., the number of neurons in the code layer) are to be specified by the user. Each layer " \
-                     "in the encoder should be smaller (i.e., have less neurons) than the previous one, whereas each " \
-                     "layer in the decoder should be larger (i.e., have more neurons) than the previous one. The " \
+        ae_text_07 = ". Therefore, the "
+        ae_text_08 = "code size"  # bold
+        ae_text_09 = " (i.e., the number of features to be extracted from the given dataset) chosen by the user " \
+                     "should be smaller than the number of columns present in the dataset. In the Beginner mode, " \
+                     "the autoencoder topology consists only of the input layer, code layer, and output layer. The " \
                      "learning rate and error threshold parameters of the backpropagation algorithm which " \
                      "trains the autoencoder are both set to 0.001 by default and the algorithm iterates over " \
                      "10 epochs by default. The autoencoder is optimized using " \
@@ -1057,12 +1047,6 @@ class BeginnerStep2HelpDialog(HelpDialog):
         text_area.insert(tk.END, ae_text_07)
         text_area.insert(tk.END, ae_text_08, "bold")
         text_area.insert(tk.END, ae_text_09)
-        text_area.insert(tk.END, ae_text_10, "bold")
-        text_area.insert(tk.END, ae_text_11)
-        text_area.insert(tk.END, ae_text_12, "bold")
-        text_area.insert(tk.END, ae_text_13)
-        text_area.insert(tk.END, ae_text_14, "bold")
-        text_area.insert(tk.END, ae_text_15)
 
         # make headings actual headings
         text_area.tag_config("heading", font=self.ebrima_h1)

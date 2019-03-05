@@ -348,7 +348,7 @@ class BeginnerMenu(tk.Toplevel):
                     input_size = len(objects.columns)-1  # -1 to account for ID column
                 else:
                     input_size = len(data.columns)-2  # -2 to account for ID column and ratings column
-                self._autoencoder_menu = AutoencoderSettingsBeginner(self._sub_ae_frame, input_size, self._on_resize)
+                self._autoencoder_menu = AutoencoderSettingsBeginner(self._sub_ae_frame, input_size)
                 self._autoencoder_menu.pack(padx=5, pady=5)
             else:
                 self._autoencoder_menu.pack(padx=5, pady=5)
@@ -392,14 +392,12 @@ class BeginnerMenu(tk.Toplevel):
             input_size = self._autoencoder_menu.get_input_size()
             code_size = self._autoencoder_menu.get_code_size()
             code_actf = ActivationType.RELU
-            encoder_top = self._autoencoder_menu.get_encoder_neurons()
+            encoder_top = []
             print("AUTOENCODER encoder topology: " + str(encoder_top))
-            encoder_actf = [ActivationType.RELU for _ in encoder_top]
-            decoder_top = self._autoencoder_menu.get_decoder_neurons()
+            decoder_top = []
             print("AUTOENCODER decoder topology: " + str(decoder_top))
-            decoder_actf = [ActivationType.RELU for _ in decoder_top]
             output_actf = ActivationType.RELU
-            activation_functions = encoder_actf + [code_actf] + decoder_actf + [output_actf]
+            activation_functions = [code_actf] + [output_actf]
             print("AUTOENCODER activation_functions: " + str(activation_functions))
             lr = 0.001
             error_thresh = 0.001

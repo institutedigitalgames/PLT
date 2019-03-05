@@ -108,6 +108,6 @@ class ActivationType(Enum):
 
     Extends `enum.Enum`.
     """
-    # THRESHOLD = 0
+    LINEAR = 0
     SIGMOID = 1
     RELU = 2

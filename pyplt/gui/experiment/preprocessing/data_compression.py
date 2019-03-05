@@ -232,8 +232,9 @@ class AutoencoderSettings(tk.Frame):
         # solution via binding state changes to method which ensures re-disable (or re-enable if appropriate time/case).
 
         # activation function
+        output_activation_fns = self._actf_options + [ActivationType.LINEAR.name]
         o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function,
-                               self._actf_options[0], *self._actf_options,
+                               output_activation_fns[0], *output_activation_fns,
                                style='Sub.PL.PLT.TMenubutton')
         o_afn.grid(row=1, column=2)
 

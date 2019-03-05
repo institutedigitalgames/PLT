@@ -61,6 +61,8 @@ class Autoencoder:
                 elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):
                     self._activation_fns.append(tf.nn.relu)
                     activation_fn_names.append(ActivationType.RELU.name)
+                elif (act_fn == ActivationType.LINEAR) or (act_fn == ActivationType.LINEAR.name):
+                    self._activation_fns.append(None)
                 # TODO: do same for new activation functions
 
         print("AUTOENCODER activation functions:")
@@ -108,7 +110,10 @@ class Autoencoder:
             else:
                 label = 'L0Out'
             summ = tf.add(tf.matmul(self._X, W[0]), b[0])  # i.e. sum(xi*wi)+b
-            outs.append(self._activation_fns[0](summ, name=label))  # i.e. activation fn
+            if self._activation_fns[0] is None:
+                outs.append(summ)  # if activation function None, use linear
+            else:
+                outs.append(self._activation_fns[0](summ, name=label))  # i.e. activation fn
 
             # calculate the outputs of any subsequent layers (the last being the output layer)
             for layer in range(1, len(self._ann_topology)):
@@ -116,8 +121,11 @@ class Autoencoder:
                     label = 'OUT'
                 else:
                     label = 'L' + str(layer) + 'Out'
-                outs.append(self._activation_fns[layer](tf.add(tf.matmul(outs[layer - 1], W[layer]),
-                                                               b[layer]), name=label))
+                if self._activation_fns[layer] is None:  # if activation function None, use linear
+                    outs.append(tf.add(tf.matmul(outs[layer - 1], W[layer]), b[layer]))
+                else:
+                    outs.append(self._activation_fns[layer](tf.add(tf.matmul(outs[layer - 1], W[layer]),
+                                                                   b[layer]), name=label))
                 # ^ last out shape = (n_samples x n_input)
 
             # get code layer output (encoding)
@@ -153,13 +161,10 @@ class Autoencoder:
             for epoch in range(self._num_epochs):
 
                 # for tensorboard
-                # writer = tf.summary.FileWriter("tensorboard-output", sess.graph)
+                writer = tf.summary.FileWriter("tensorboard-output", sess.graph)
 
                 # sess.run(self._optimiser, feed_dict={self._X: self._training_examples})
                 # train_loss = self._loss.eval(feed_dict={self._X: self._training_examples}, session=sess)
-
-                # for tensorboard
-                # writer.close()
 
                 batch_size = 500
                 # or do in batches...
@@ -173,6 +178,9 @@ class Autoencoder:
                     sess.run(self._optimiser, feed_dict={self._X: X_batch})
 
                 train_loss = self._loss.eval(feed_dict={self._X: self._training_examples}, session=sess)
+
+                # for tensorboard
+                writer.close()
 
                 if train_loss <= self._error_threshold:
                     print("Reached loss below or equal to error threshold. Training terminated.")

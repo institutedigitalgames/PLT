@@ -7,8 +7,7 @@ class Autoencoder:
     """Autoencoder class."""
 
     def __init__(self, input_size, code_size, encoder_topology, decoder_topology, activation_functions=None,
-                 learn_rate=0.001, error_threshold=0.001, epochs=10,
-                 progress_window=None, exec_stopper=None):
+                 learn_rate=0.001, error_threshold=0.001, epochs=10):
         """Initialize the Autoencoder.
 
         :param input_size: the number of input features that will be fed into the network. This determines the number of
@@ -34,14 +33,8 @@ class Autoencoder:
         :param epochs: the maximum number of iterations the algorithm should make over the entire set of
             training examples (default 10).
         :type epochs: int, optional
-        :param progress_window: a GUI object (extending the `tkinter.Toplevel` widget) used to display a
-            progress log and progress bar during the experiment execution (default None).
-        :type progress_window: :class:`pyplt.gui.experiment.progresswindow.ProgressWindow`, optional
-        :param exec_stopper: an abort flag object used to abort the execution before completion
-            (default None).
-        :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
-        :return: None -- if experiment is aborted before completion by `exec_stopper`.
         """
+        self._vars_declared = False
         self._num_inputs = input_size
         self._num_output = self._num_inputs
         self._code_size = code_size
@@ -51,6 +44,14 @@ class Autoencoder:
         self._error_threshold = error_threshold
         self._num_epochs = epochs
         self._training_examples = None
+        self._graph = None
+        self._session = None
+        self._X = None
+        self._encoding = None
+        self._output_layer = None
+        self._loss = None
+        self._optimiser = None
+        self._init_op = None
 
         # activation functions
         self._activation_fns = []
@@ -76,13 +77,34 @@ class Autoencoder:
         print("AUTOENCODER activation functions:")
         print(self._activation_fns)
 
-        # TODO: move initialization to its own method like BackpropagationTF (so that GUI doesn't freeze on
-        # ^ TODO: pressing Run Experiment button...
+    def init_train(self, progress_window=None, exec_stopper=None):
+        """Initialize the model (topology).
+
+        This method is to be called if one wishes to initialize the model (topology) explicitly.
+        This is done by declaring `tensorflow` placeholders, variables, and operations. If not called explicitly, the
+        :meth:`train()` method will call it once implicitly.
+
+        :param progress_window: a GUI object (extending the `tkinter.Toplevel` widget) used to display a
+            progress log and progress bar during the experiment execution (default None).
+        :type progress_window: :class:`pyplt.gui.experiment.progresswindow.ProgressWindow`, optional
+        :param exec_stopper: an abort flag object used to abort the execution before completion
+            (default None).
+        :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
+        """
         # SET UP TENSORFLOW STUFF
 
-        # start a new graph and session
-        self._graph = tf.Graph()
+        # start a new graph and session (delete any previous tf.Variables, etc.)
+        self._graph = tf.Graph()  # reset the graph - equivalent to tf.reset_default_graph()
+        # first, close any existing session, if applicable
+        # unless already handled by Experiment.run()
+        if self._session is not None:
+            still_open = not self._session._closed
+            print("(autoencoder) Is tf.Session still open? " + str(still_open))
+            if still_open:
+                self.clean_up()
+        print("(autoencoder) Opening tf.Session...")
         self._session = tf.Session(graph=self._graph)
+        print("(autoencoder) Done.")
 
         print("Initializing autoencoder.")
         if progress_window is not None:
@@ -90,9 +112,8 @@ class Autoencoder:
 
         if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
             # abort execution!
-            print("Aborting autoencoder execution...")
+            print("Aborting autoencoder execution during init...")
             return
-        # TODO: must move initialization to its own method like BackpropagationTF for this to make a difference...
 
         with self._graph.as_default():
             # input
@@ -163,6 +184,14 @@ class Autoencoder:
             # finally setup the initialisation operator
             self._init_op = tf.global_variables_initializer()
 
+            if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted after init
+                # abort execution!
+                print("Aborting autoencoder execution during init...")
+                return
+
+        self._vars_declared = True
+        print("Autoencoder initialization complete.")
+
     def train(self, training_examples, progress_window=None, exec_stopper=None):
         """Train the autoencoder.
 
@@ -190,6 +219,14 @@ class Autoencoder:
             # abort execution!
             print("Aborting autoencoder execution...")
             return
+
+        if not self._vars_declared:
+            # run first time training only (unless already forced externally)
+            self.init_train(progress_window=progress_window, exec_stopper=exec_stopper)
+            if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted after init
+                # abort execution!
+                print("Aborting autoencoder execution during/after init...")
+                return
 
         with self._graph.as_default():
             sess = self._session

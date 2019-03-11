@@ -558,10 +558,23 @@ class Experiment:
                 raise AutoencoderNormalizationValueError(norm_method=NormalizationType.MIN_MAX)
 
             # train encoder
-            self._autoencoder_loss = self._autoencoder.train(samples)
+            self._autoencoder_loss = self._autoencoder.train(samples, progress_window=progress_window,
+                                                             exec_stopper=exec_stopper)
+            if self._autoencoder_loss is None:  # check if execution was aborted!
+                print("Aborting experiment execution...")
+                # make sure to do final clean up (close tf.Session) before aborting!
+                self._autoencoder.clean_up()
+                return
 
             # encode samples
-            encoded_samples = np.array(self._autoencoder.encode(samples))
+            encoded_samples = np.array(self._autoencoder.encode(samples, progress_window=progress_window,
+                                                                exec_stopper=exec_stopper))
+            if encoded_samples is None:  # check if execution was aborted!
+                print("Aborting experiment execution...")
+                # make sure to do final clean up (close tf.Session) before aborting!
+                self._autoencoder.clean_up()
+                return
+
             print("encoded_samples")
             print(encoded_samples)
             n_new_feats = encoded_samples.shape[1]  # n_cols

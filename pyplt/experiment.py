@@ -753,7 +753,7 @@ class Experiment:
                                                               progress_window=progress_window,
                                                               exec_stopper=exec_stopper)
                 # finally, do any final clean ups required by the pl algorithm class
-                self._pl_algo.clean_up()
+                self._pl_algo.clean_up()  # TODO: apply this before if aborted on train_acc!!!
                 if train_acc is None:  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return
@@ -819,7 +819,7 @@ class Experiment:
                                               use_feats=self._features,
                                               progress_window=progress_window, exec_stopper=exec_stopper)
                 # finally, do any final clean ups required by the pl algorithm class
-                self._pl_algo.clean_up()
+                self._pl_algo.clean_up()  # TODO: apply this before if aborted on train_acc!!!
                 if (train_acc is None) or (test_acc is None):  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return

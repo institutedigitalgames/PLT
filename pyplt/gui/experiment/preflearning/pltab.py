@@ -782,8 +782,13 @@ class PLFrame(tk.Frame):
         """
         # Actually run the experiment
         try:
-            eval_metrics, fold_metrics = exp.run(shuffle=shuffle, random_state=random_state,
-                                                 debug=True, progress_window=pw, exec_stopper=exec_stopper)
+            results = exp.run(shuffle=shuffle, random_state=random_state,
+                              debug=True, progress_window=pw, exec_stopper=exec_stopper)
+            if results is None:  # check if experiment was aborted
+                # abort execution!
+                print("Abort complete.")
+                return
+            eval_metrics, fold_metrics = results
         except MemoryError as ex:
             pw.put(ex.__class__.__name__)  # let progress window know of the error so it can abort properly
             return  # terminate experiment thread by returning
@@ -792,11 +797,6 @@ class PLFrame(tk.Frame):
             pw.put(str(ex.__class__.__name__) + "??" + ex.get_summary() + "??" + ex.get_message())
             # ^ let progress window know of the error so it can abort properly
             return  # terminate experiment thread by returning
-
-        if eval_metrics is None:  # check if experiment was aborted
-            # abort execution!
-            print("Abort complete.")
-            return
 
         # get the features selected by fs (if applicable)
         sel_feats = exp.get_features()

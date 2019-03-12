@@ -7,7 +7,7 @@ class Autoencoder:
     """Autoencoder class."""
 
     def __init__(self, input_size, code_size, encoder_topology, decoder_topology, activation_functions=None,
-                 learn_rate=0.001, error_threshold=0.001, epochs=10):
+                 learn_rate=0.001, error_threshold=0.001, epochs=10, batch_size=32):
         """Initialize the Autoencoder.
 
         :param input_size: the number of input features that will be fed into the network. This determines the number of
@@ -33,6 +33,8 @@ class Autoencoder:
         :param epochs: the maximum number of iterations the algorithm should make over the entire set of
             training examples (default 10).
         :type epochs: int, optional
+        :param batch_size: number of samples per gradient update (default 32).
+        :type batch_size: int, optional
         """
         self._vars_declared = False
         self._num_inputs = input_size
@@ -43,6 +45,7 @@ class Autoencoder:
         self._learn_rate = learn_rate
         self._error_threshold = error_threshold
         self._num_epochs = epochs
+        self._batch_size = batch_size
         self._training_examples = None
         self._graph = None
         self._session = None
@@ -245,7 +248,7 @@ class Autoencoder:
                 # sess.run(self._optimiser, feed_dict={self._X: self._training_examples})
                 # train_loss = self._loss.eval(feed_dict={self._X: self._training_examples}, session=sess)
 
-                batch_size = 500
+                batch_size = self._batch_size
                 # or do in batches...
                 num_batches = len(training_examples) // batch_size
                 for iteration in range(num_batches):

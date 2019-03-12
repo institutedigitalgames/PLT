@@ -42,7 +42,7 @@ class BackpropagationTF(PLAlgorithm):
     """
 
     def __init__(self, ann_topology=None, learn_rate=0.001, error_threshold=0.001, epochs=10,
-                 activation_functions=None, debug=False):
+                 activation_functions=None, batch_size=32, debug=False):
         """Initializes the BackpropagationTF object.
 
         :param ann_topology: a list indicating the topology of the artificial neural network (ANN) to be used with the
@@ -63,6 +63,8 @@ class BackpropagationTF(PLAlgorithm):
             for each layer of the ANN; if None, all layers will use the Rectified Linear Unit (ReLU) function i.e.
             :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
         :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
+        :param batch_size: number of samples per gradient update (default 32).
+        :type batch_size: int, optional
         :param debug: specifies whether or not to print notes to console for debugging (default False).
         :type debug: bool, optional
         """
@@ -86,6 +88,7 @@ class BackpropagationTF(PLAlgorithm):
         self._learn_rate = learn_rate
         self._error_threshold = error_threshold
         self._epochs = epochs
+        self._batch_size = batch_size
 
         # convert activation function enums to actual tensorflow functions
         # but keep ActivationType names (in activation_fn_names) for more readable printing
@@ -326,14 +329,36 @@ class BackpropagationTF(PLAlgorithm):
                     return
 
                 # actual training
-                _, loss_ = sess.run([self._optimiser, self._total_loss],
-                                    feed_dict={self._pref_x: prefs_x, self._non_x: nons_x})
-                loss_curve.append(loss_)
+                # _, loss_ = sess.run([self._optimiser, self._total_loss],
+                #                     feed_dict={self._pref_x: prefs_x, self._non_x: nons_x})
+                # loss_curve.append(loss_)
+
+                batch_size = self._batch_size
+                # do in batches...
+                num_batches = len(prefs_x.shape[1]) // batch_size
+                for iteration in range(num_batches):
+                    if iteration == num_batches - 1:
+                        # last iteration
+                        prefs_x_batch = prefs_x[iteration * batch_size:]
+                        nons_x_batch = nons_x[iteration * batch_size:]
+                    else:
+                        prefs_x_batch = prefs_x[iteration * batch_size:(iteration + 1) * batch_size]
+                        nons_x_batch = nons_x[iteration * batch_size:(iteration + 1) * batch_size]
+                    # actual training
+                    sess.run([self._optimiser, self._total_loss],
+                             feed_dict={self._pref_x: prefs_x_batch, self._non_x: nons_x_batch})
+
+                train_loss = self._total_loss.eval(feed_dict={self._pref_x: prefs_x,
+                                                              self._non_x: nons_x}, session=sess)
+
+                loss_curve.append(train_loss)
                 if self._debug:
-                    print("Epoch:", (epoch + 1), "loss =", str(loss_).format("{:.3f}"))
-                if loss_ <= self._error_threshold:
+                    print("Epoch:", (epoch + 1), "loss =", str(train_loss).format("{:.3f}"))
+                if train_loss <= self._error_threshold:
                     print("Reached loss below or equal to error threshold. Training terminated.")
                     break
+
+                print("epoch {} loss {}".format(epoch, train_loss))
 
             if self._debug:
                 # print weights !!!!!!!!!!!

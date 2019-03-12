@@ -1182,12 +1182,12 @@ class BeginnerStep4HelpDialog(HelpDialog):
                      "optimizes an error function by adjusting the weights of an artificial neural network (ANN) " \
                      "model proportionally to the gradient of the error with respect to the current value of the " \
                      "weights and current data samples. The proportion and therefore the strength of each update " \
-                     "is regulated by the learning rate (0.1 in the Beginner Mode). The error function used " \
+                     "is regulated by the learning rate (0.001 in the Beginner Mode). The error function used " \
                      "is the Rank Margin function which for a given pair of data samples (A and B, with A preferred " \
                      "over B) yields 0 if the network output for A (fA) is more than one unit larger than the " \
                      "network output for B (fB) and 1.0-((fA)-(fB)) otherwise. The total error is averaged over " \
                      "the complete set of pairs in the training set. If the error is below a given threshold " \
-                     "(0.1 in the Beginner Mode), training stops before reaching the specified number of epochs, " \
+                     "(0.001 in the Beginner Mode), training stops before reaching the specified number of epochs, " \
                      "and the current weight values are returned as the final model. In the Beginner Mode, the " \
                      "network topology is set up such that it contains one hidden layer of 5 neurons and uses " \
                      "the ReLU activation function for each neuron. In PLT, the algorithm was implemented using the "

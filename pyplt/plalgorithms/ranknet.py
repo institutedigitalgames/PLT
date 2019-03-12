@@ -173,7 +173,14 @@ class RankNet(PLAlgorithm):
         :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
         :return: None -- if experiment is aborted before completion by `exec_stopper`.
         """
-        #TODO: check for abort via exec_stopper + print to progress_window, etc.
+        print("Starting training with RankNet.")
+        if progress_window is not None:
+            progress_window.put("Starting training with RankNet.")
+
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet execution...")
+            return
 
         train_objects_ = train_objects.copy(deep=True)
         train_ranks_ = train_ranks.copy(deep=True)
@@ -190,6 +197,15 @@ class RankNet(PLAlgorithm):
 
         BATCH_SIZE = self._batch_size
         self._model.fit([prefs_x, nons_x], y, batch_size=BATCH_SIZE, epochs=self._epochs, verbose=1)
+
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet execution...")
+            return
+
+        print("Training complete.")
+        if progress_window is not None:
+            progress_window.put("Training complete.")
 
         # Generate scores from features.
 
@@ -225,6 +241,11 @@ class RankNet(PLAlgorithm):
             * None -- if aborted before completion by `exec_stopper`.
         :rtype: float
         """
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet execution...")
+            return
+
         train_objects_ = train_objects.copy(deep=True)
         train_ranks_ = train_ranks.copy(deep=True)
         self._n_feats = len(train_objects_.columns)
@@ -237,6 +258,14 @@ class RankNet(PLAlgorithm):
         acc = 100.0 - (100.0 * (errors / predictions.shape[0]))
 
         print("Performance (TRAINING): " + str(acc))
+
+        if progress_window is not None:
+            progress_window.put("Training accuracy: " + str(acc))
+
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet execution...")
+            return
 
         return acc
 
@@ -264,6 +293,11 @@ class RankNet(PLAlgorithm):
             * None -- if aborted before completion by `exec_stopper`.
         :rtype: float
         """
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet test execution...")
+            return
+
         objects_ = objects.copy(deep=True)
         test_ranks_ = test_ranks.copy(deep=True)
         self._n_feats = len(objects_.columns)
@@ -276,6 +310,14 @@ class RankNet(PLAlgorithm):
         acc = 100.0 - (100.0 * (errors / predictions.shape[0]))
 
         print("Performance (TEST): " + str(acc))
+
+        if self._debug:
+            print("Performance (TEST): " + str(acc) + "%")
+
+        if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
+            # abort execution!
+            print("Aborting RankNet test execution...")
+            return
 
         return acc
 

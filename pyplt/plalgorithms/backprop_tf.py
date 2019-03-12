@@ -106,6 +106,8 @@ class BackpropagationTF(PLAlgorithm):
                 elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.relu)
                     activation_fn_names.append(ActivationType.RELU.name)
+                elif (act_fn == ActivationType.LINEAR) or (act_fn == ActivationType.LINEAR.name):
+                    self._activation_fns.append(None)
                 # TODO: do same for new activation functions
 
         self._vars_declared = False
@@ -194,10 +196,16 @@ class BackpropagationTF(PLAlgorithm):
                 suffix = 'OUT'
             else:
                 suffix = 'L0Out'
-            summ = tf.add(tf.matmul(self._pref_x, W[0]), b[0])  # i.e. sum(xi*wi)+b
-            pref_outs.append(self._activation_fns[0](summ, name='Pref' + suffix))  # i.e. activation fn
-            summ = tf.add(tf.matmul(self._non_x, W[0]), b[0])  # i.e. sum(xi*wi)+b
-            non_outs.append(self._activation_fns[0](summ, name='Non' + suffix))  # i.e. activation fn
+            if self._activation_fns[0] is None:  # if activation function None, use linear
+                summ = tf.add(tf.matmul(self._pref_x, W[0]), b[0], name='Pref' + suffix)  # i.e. sum(xi*wi)+b
+                pref_outs.append(summ)  # i.e. linear activation
+                summ = tf.add(tf.matmul(self._non_x, W[0]), b[0], name='Non' + suffix)  # i.e. sum(xi*wi)+b
+                non_outs.append(summ)  # i.e. linear activation
+            else:
+                summ = tf.add(tf.matmul(self._pref_x, W[0]), b[0])  # i.e. sum(xi*wi)+b
+                pref_outs.append(self._activation_fns[0](summ, name='Pref' + suffix))  # i.e. activation fn
+                summ = tf.add(tf.matmul(self._non_x, W[0]), b[0])  # i.e. sum(xi*wi)+b
+                non_outs.append(self._activation_fns[0](summ, name='Non' + suffix))  # i.e. activation fn
 
             # calculate the outputs of any subsequent layers (the last being the output layer)
             for layer in range(1, len(self._ann_topology)):
@@ -205,12 +213,18 @@ class BackpropagationTF(PLAlgorithm):
                     suffix = 'OUT'
                 else:
                     suffix = 'L' + str(layer) + 'Out'
-                pref_outs.append(self._activation_fns[layer](tf.add(tf.matmul(pref_outs[layer - 1], W[layer]),
-                                                                    b[layer]), name='Pref' + suffix))
-                # ^ last pref_out shape = (r x 1)
-                non_outs.append(self._activation_fns[layer](tf.add(tf.matmul(non_outs[layer - 1], W[layer]),
-                                                                   b[layer]), name='Non' + suffix))
-                # ^ last non_out shape = (r x 1)
+                if self._activation_fns[layer] is None:  # if activation function None, use linear
+                    pref_outs.append(tf.add(tf.matmul(pref_outs[layer - 1], W[layer]), b[layer], name='Pref' + suffix))
+                    # ^ last pref_out shape = (r x 1)
+                    non_outs.append(tf.add(tf.matmul(non_outs[layer - 1], W[layer]), b[layer], name='Non' + suffix))
+                    # ^ last non_out shape = (r x 1)
+                else:
+                    pref_outs.append(self._activation_fns[layer](tf.add(tf.matmul(pref_outs[layer - 1], W[layer]),
+                                                                        b[layer]), name='Pref' + suffix))
+                    # ^ last pref_out shape = (r x 1)
+                    non_outs.append(self._activation_fns[layer](tf.add(tf.matmul(non_outs[layer - 1], W[layer]),
+                                                                       b[layer]), name='Non' + suffix))
+                    # ^ last non_out shape = (r x 1)
 
             # Also include a cost/loss function for the optimisation/backpropagation to work on
             # Here we use error/loss = max(1 - (predict_pref - predict_other), 0)

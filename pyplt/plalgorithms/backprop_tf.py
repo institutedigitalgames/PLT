@@ -335,15 +335,22 @@ class BackpropagationTF(PLAlgorithm):
 
                 batch_size = self._batch_size
                 # do in batches...
-                num_batches = len(prefs_x.shape[1]) // batch_size
+                # print("num samples: " + str(prefs_x.shape[0]))
+                num_batches = prefs_x.shape[0] // batch_size
+                # print("num_batches: " + str(num_batches))
+                if num_batches == 0:  # if dataset is smaller than batch_size, use 1 batch (whole dataset)
+                    num_batches = 1
                 for iteration in range(num_batches):
+                    # print("batch " + str(iteration))
                     if iteration == num_batches - 1:
                         # last iteration
                         prefs_x_batch = prefs_x[iteration * batch_size:]
                         nons_x_batch = nons_x[iteration * batch_size:]
+                        # print("using samples " + str(iteration * batch_size) + ":")
                     else:
                         prefs_x_batch = prefs_x[iteration * batch_size:(iteration + 1) * batch_size]
                         nons_x_batch = nons_x[iteration * batch_size:(iteration + 1) * batch_size]
+                        # print("using samples "+str(iteration * batch_size) + ":" + str((iteration + 1) * batch_size))
                     # actual training
                     sess.run([self._optimiser, self._total_loss],
                              feed_dict={self._pref_x: prefs_x_batch, self._non_x: nons_x_batch})

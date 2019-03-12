@@ -250,7 +250,11 @@ class Autoencoder:
 
                 batch_size = self._batch_size
                 # or do in batches...
+                # print("num samples: " + str(len(training_examples)))
                 num_batches = len(training_examples) // batch_size
+                # print("num_batches: " + str(num_batches))
+                if num_batches == 0:  # if dataset is smaller than batch_size, use 1 batch (whole dataset)
+                    num_batches = 1
                 for iteration in range(num_batches):
                     if iteration == num_batches-1:
                         # last iteration
@@ -413,3 +417,13 @@ class Autoencoder:
 
     def __exit__(self, exc_type):
         self.clean_up()
+
+# train_count = 35
+# BATCH_SIZE = 32
+#
+# i=0
+# for start, end in zip(range(0, train_count, BATCH_SIZE),
+#                       range(BATCH_SIZE, train_count + 1,BATCH_SIZE)):
+#     print("batch " + str(i))
+#     print("using samples " + str(start) + ":" + str(end))
+#     i += 1

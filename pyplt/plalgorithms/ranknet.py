@@ -171,7 +171,9 @@ class RankNet(PLAlgorithm):
         :param exec_stopper: an abort flag object used to abort the execution before completion
             (default None).
         :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
-        :return: None -- if experiment is aborted before completion by `exec_stopper`.
+        :return:
+            * True -- if execution is completed successfully.
+            * None -- if experiment is aborted before completion by `exec_stopper`.
         """
         print("Starting training with RankNet.")
         if progress_window is not None:
@@ -206,6 +208,8 @@ class RankNet(PLAlgorithm):
         print("Training complete.")
         if progress_window is not None:
             progress_window.put("Training complete.")
+
+        return True
 
         # Generate scores from features.
 

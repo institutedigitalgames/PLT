@@ -79,7 +79,9 @@ class PLAlgorithm:
         :param exec_stopper: an abort flag object used to abort the execution before completion
             (default None).
         :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
-        :return: None -- if experiment is aborted before completion by `exec_stopper`.
+        :return:
+            * True or any other value -- if execution is completed successfully.
+            * None -- if experiment is aborted before completion by `exec_stopper`.
         """
         pass
 

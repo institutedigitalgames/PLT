@@ -259,7 +259,9 @@ class BackpropagationTF(PLAlgorithm):
         :param exec_stopper: an abort flag object used to abort the execution before completion
             (default None).
         :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
-        :return: None -- if experiment is aborted before completion by `exec_stopper`.
+        :return:
+            * True -- if execution is completed successfully.
+            * None -- if experiment is aborted before completion by `exec_stopper`.
         """
         print("already initialized?" + str(self._vars_declared))
 
@@ -396,6 +398,8 @@ class BackpropagationTF(PLAlgorithm):
         print("Training complete.")
         if progress_window is not None:
             progress_window.put("Training complete.")
+
+        return True
 
     def calc_train_accuracy(self, train_objects, train_ranks, use_feats=None, progress_window=None, exec_stopper=None):
         """An algorithm-specific approach to calculating the training accuracy of the learned model.

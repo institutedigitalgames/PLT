@@ -742,18 +742,22 @@ class Experiment:
                 print(train_ranks)
 
                 # try calling pl_algo.init_train() in case the model setup (e.g. weights) needs to be reset per fold
-                self._pl_algo.init_train(len(self._features))
+                self._pl_algo.init_train(len(self._features))  # where tf Session gets created (if applicable)
 
-                self._pl_algo.train(train_objects, train_ranks, use_feats=self._features,
-                                    progress_window=progress_window,
-                                    exec_stopper=exec_stopper)
+                success = self._pl_algo.train(train_objects, train_ranks, use_feats=self._features,
+                                              progress_window=progress_window,
+                                              exec_stopper=exec_stopper)
+                if success is None:  # check if execution was aborted!
+                    self._pl_algo.clean_up()  # do any final clean ups (e.g. close tf Session)
+                    print("Aborting experiment execution...")
+                    return
                 # algo_copy = copy.deepcopy(self._pl_algo)  # make a deep copy of the trained algorithm for model saving
                 model = self._pl_algo.save_model(timestamp=0.0, suppress=True)  # store the trained model for saving
                 train_acc = self._pl_algo.calc_train_accuracy(train_objects, train_ranks, use_feats=self._features,
                                                               progress_window=progress_window,
                                                               exec_stopper=exec_stopper)
                 # finally, do any final clean ups required by the pl algorithm class
-                self._pl_algo.clean_up()  # TODO: apply this before if aborted on train_acc!!!
+                self._pl_algo.clean_up()
                 if train_acc is None:  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return
@@ -797,18 +801,23 @@ class Experiment:
                 print(test_ranks)
 
                 # try calling pl_algo.init_train() in case the model setup (e.g. weights) needs to be reset per fold
-                self._pl_algo.init_train(len(self._features))
+                self._pl_algo.init_train(len(self._features))  # where tf Session gets created (if applicable)
 
                 # first train
-                self._pl_algo.train(train_objects, train_ranks, use_feats=self._features,
-                                    progress_window=progress_window,
-                                    exec_stopper=exec_stopper)
+                success = self._pl_algo.train(train_objects, train_ranks, use_feats=self._features,
+                                              progress_window=progress_window,
+                                              exec_stopper=exec_stopper)
+                if success is None:  # check if execution was aborted!
+                    self._pl_algo.clean_up()  # do any final clean ups (e.g. close tf Session)
+                    print("Aborting experiment execution...")
+                    return
                 # algo_copy = copy.deepcopy(self._pl_algo)  # make a deep copy of the trained algorithm for model saving
                 model = self._pl_algo.save_model(timestamp=0.0, suppress=True)  # store the trained model for saving
                 train_acc = self._pl_algo.calc_train_accuracy(train_objects, train_ranks, use_feats=self._features,
                                                               progress_window=progress_window,
                                                               exec_stopper=exec_stopper)
                 if train_acc is None:  # check if execution was aborted!
+                    self._pl_algo.clean_up()  # do any final clean ups (e.g. close tf Session)
                     print("Aborting experiment execution...")
                     return
                 eval_metrics['Training Accuracy'] = train_acc
@@ -819,7 +828,7 @@ class Experiment:
                                               use_feats=self._features,
                                               progress_window=progress_window, exec_stopper=exec_stopper)
                 # finally, do any final clean ups required by the pl algorithm class
-                self._pl_algo.clean_up()  # TODO: apply this before if aborted on train_acc!!!
+                self._pl_algo.clean_up()
                 if (train_acc is None) or (test_acc is None):  # check if execution was aborted!
                     print("Aborting experiment execution...")
                     return

@@ -40,6 +40,7 @@ class PLAlgo(Enum):
     BACKPROPAGATION = 2
     BACKPROPAGATION_SKLEARN = 3
     NEUROEVOLUTION = 4
+    RANKNET = 5
 
 
 class EvaluatorType(Enum):

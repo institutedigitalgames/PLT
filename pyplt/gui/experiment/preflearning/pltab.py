@@ -300,7 +300,8 @@ class PLFrame(tk.Frame):
             # get corresponding GUI menu class and instantiate
             # TODO: for special cases (e.g., BACKPROPAGATION) where algorithm GUI menu constructor requires
             # additional arguments, add an if statement here
-            if sel_type == PLAlgo.BACKPROPAGATION or sel_type == PLAlgo.BACKPROPAGATION_SKLEARN:
+            if sel_type == PLAlgo.BACKPROPAGATION or sel_type == PLAlgo.BACKPROPAGATION_SKLEARN\
+                    or sel_type == PLAlgo.RANKNET:
                 new_menu = supported_methods.supported_algorithms[sel_type][1](self._algo_menu, self._on_resize)
             else:
                 new_menu = supported_methods.supported_algorithms[sel_type][1](self._algo_menu)

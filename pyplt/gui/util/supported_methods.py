@@ -31,9 +31,9 @@ dicts declared in this module:
 
 from pyplt.util.enums import FSMethod, PLAlgo, EvaluatorType
 from pyplt.fsmethods import sfs
-from pyplt.plalgorithms import ranksvm, backprop_tf
+from pyplt.plalgorithms import ranksvm, backprop_tf, ranknet
 from pyplt.evaluation import holdout, cross_validation
-from pyplt.gui.experiment.preflearning import ranksvm_menu, backprop_menu, evaluator_menus
+from pyplt.gui.experiment.preflearning import ranksvm_menu, backprop_menu, evaluator_menus, ranknet_menu
 
 # lists of supported algorithms/methods and their corresponding GUI menus
 # as dicts of tuples with
@@ -51,7 +51,8 @@ supported_fs_methods = {
 # -------------------------------- Preference Learning Algorithms --------------------------------
 supported_algorithms = {
     PLAlgo.RANKSVM: (ranksvm.RankSVM, ranksvm_menu.RankSVMMenu),  # RankSVM
-    PLAlgo.BACKPROPAGATION: (backprop_tf.BackpropagationTF, backprop_menu.BackpropMenu)  # Backpropagation (tensorflow)
+    PLAlgo.BACKPROPAGATION: (backprop_tf.BackpropagationTF, backprop_menu.BackpropMenu),  # Backpropagation (tensorflow)
+    PLAlgo.RANKNET: (ranknet.RankNet, ranknet_menu.RankNetMenu)  # RankNet
     # ^ TODO: add new algorithms (for ADVANCED MODE) here in the same way
     # N.B. if the GUI Menu requires additional parameters (like BackpropMenu, for example), make sure to update the
     #   pyplt.gui.experiment.featureselection.featselectiontab.FeatureSelectionFrame#_update_algo_menu() and
@@ -61,7 +62,8 @@ supported_algorithms = {
 # for the Beginner mode, we only need the classes, not the menus
 supported_algorithms_beginner = {
     PLAlgo.RANKSVM: ranksvm.RankSVM,  # RankSVM
-    PLAlgo.BACKPROPAGATION: backprop_tf.BackpropagationTF  # Backpropagation (tensorflow)
+    PLAlgo.BACKPROPAGATION: backprop_tf.BackpropagationTF,  # Backpropagation (tensorflow)
+    PLAlgo.RANKNET: ranknet.RankNet  # RankNet
     # ^ TODO: add new algorithms (for BEGINNER MODE) here in the same way
     # N.B. to specify parameter values other than the defaults, make sure to update the preference learning section
     #   of the pyplt.gui.beginnermenu.BeginnerMenu#_run_exp() method accordingly.

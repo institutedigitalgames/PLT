@@ -30,6 +30,7 @@ from pyplt.evaluation.holdout import HoldOut
 from pyplt.exceptions import NoFeaturesError, NoRanksDerivedError, InvalidParameterValueException, \
     NormalizationValueError, IncompatibleFoldIndicesException, AutoencoderNormalizationValueError
 from pyplt.experiment import Experiment
+from pyplt.plalgorithms.ranknet import RankNet
 from pyplt.gui.experiment.preprocessing.data_compression import AutoencoderSettingsBeginner
 from pyplt.util.enums import NormalizationType, ActivationType
 from pyplt.fsmethods.sfs import SFS
@@ -458,6 +459,9 @@ class BeginnerMenu(tk.Toplevel):
             # ^ learn_rate, error_threshold, epochs: (default: 0.001, 0.001, 10)
         elif pl_algo == PLAlgo.RANKSVM:
             pl_algo_obj = RankSVM(kernel=KernelType.RBF, gamma=1)
+        elif pl_algo == PLAlgo.RANKNET:
+            pl_algo_obj = RankNet(ann_topology=[5, 1], hidden_activation_functions=[ActivationType.RELU])
+            # ^ learn_rate, epochs: (default: 0.001, 100)
         else:
             # get algorithm object and instantiate with its default parameter values
             return supported_methods.get_algorithm_instance(pl_algo, beginner_mode=True)

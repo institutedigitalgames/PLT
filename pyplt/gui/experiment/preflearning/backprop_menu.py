@@ -45,8 +45,8 @@ class BackpropMenu(tk.Frame):
         self._hidden_neurons[0] = tk.IntVar(value=5)
         self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.RELU.name)
         self._output_activation_function = tk.StringVar(value=ActivationType.RELU.name)
-        self._learn_rate = tk.DoubleVar(value=0.1)
-        self._error_thresh = tk.DoubleVar(value=0.1)
+        self._learn_rate = tk.DoubleVar(value=0.001)
+        self._error_thresh = tk.DoubleVar(value=0.001)
         self._epochs = tk.IntVar(value=10)
 
         self._on_resize_fn = on_resize_fn

@@ -455,7 +455,7 @@ class BeginnerMenu(tk.Toplevel):
         if pl_algo == PLAlgo.BACKPROPAGATION:
             pl_algo_obj = BackpropagationTF(ann_topology=[5, 1],
                                             activation_functions=[ActivationType.RELU, ActivationType.RELU])
-            # ^ learn_rate, error_threshold, epochs: (default: 0.1, 0.1, 10)
+            # ^ learn_rate, error_threshold, epochs: (default: 0.001, 0.001, 10)
         elif pl_algo == PLAlgo.RANKSVM:
             pl_algo_obj = RankSVM(kernel=KernelType.RBF, gamma=1)
         else:

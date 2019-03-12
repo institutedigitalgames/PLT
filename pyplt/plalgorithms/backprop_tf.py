@@ -41,7 +41,7 @@ class BackpropagationTF(PLAlgorithm):
     returned as the final model. In PLT, the algorithm was implemented using the `tensorflow` library.
     """
 
-    def __init__(self, ann_topology=None, learn_rate=0.1, error_threshold=0.1, epochs=10,
+    def __init__(self, ann_topology=None, learn_rate=0.001, error_threshold=0.001, epochs=10,
                  activation_functions=None, debug=False):
         """Initializes the BackpropagationTF object.
 
@@ -51,10 +51,10 @@ class BackpropagationTF(PLAlgorithm):
             indicating an ANN with no hidden layers and only an output layer (consisting of 1 neuron) (default None).
         :type ann_topology: list or None, optional
         :param learn_rate: the learning rate used in the weight update step of the Backpropagation algorithm
-            (default 0.1).
+            (default 0.001).
         :type learn_rate: float, optional
         :param error_threshold: a threshold at or below which the error of a model is considered to be
-            sufficiently trained (default 0.1).
+            sufficiently trained (default 0.001).
         :type error_threshold: float, optional
         :param epochs: the maximum number of iterations the algorithm should make over the entire pairwise rank
             training set (default 10).
@@ -100,7 +100,7 @@ class BackpropagationTF(PLAlgorithm):
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.sigmoid)
                     activation_fn_names.append(ActivationType.SIGMOID.name)
-                elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):
+                elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.relu)
                     activation_fn_names.append(ActivationType.RELU.name)
                 # TODO: do same for new activation functions
@@ -226,7 +226,7 @@ class BackpropagationTF(PLAlgorithm):
             # but results should theoretically be (and seem to be) the same
 
             # now setup an optimiser
-            self._optimiser = tf.train.GradientDescentOptimizer(
+            self._optimiser = tf.train.AdamOptimizer(
                 learning_rate=self._learn_rate).minimize(self._total_loss)
 
             # finally setup the initialisation operator

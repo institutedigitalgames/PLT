@@ -104,7 +104,9 @@ class RankSVM(PLAlgorithm):
         :type progress_window: :class:`pyplt.gui.experiment.progresswindow.ProgressWindow`, optional
         :param exec_stopper: an abort flag object used to abort the execution before completion (default None).
         :type exec_stopper: :class:`pyplt.util.AbortFlag`, optional
-        :return: None -- if experiment is aborted before completion by `exec_stopper`.
+        :return:
+            * True -- if execution is completed successfully.
+            * None -- if experiment is aborted before completion by `exec_stopper`.
         """
         if (exec_stopper is not None) and (exec_stopper.stopped()):  # check if experiment was aborted
             # abort execution!
@@ -184,6 +186,8 @@ class RankSVM(PLAlgorithm):
 
         if progress_window is not None:
             progress_window.put("Training complete.")
+
+        return True
 
     @staticmethod
     def transform_data(object_):

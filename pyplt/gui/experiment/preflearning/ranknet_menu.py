@@ -140,7 +140,7 @@ class RankNetMenu(tk.Frame):
         # solution via binding state changes to method which ensures re-disable (or re-enable if appropriate time/case).
 
         # activation function
-        options = ["LINEAR"]
+        options = [ActivationType.LINEAR.name]
         o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function, options[0], *options,
                                style='Sub.PL.PLT.TMenubutton')
         o_afn.grid(row=1, column=2)

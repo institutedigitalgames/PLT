@@ -84,6 +84,8 @@ class RankNet(PLAlgorithm):
         num_hidden_layers = len(ann_topology)-1
         if hidden_activation_functions is None:
             hidden_activation_functions = [ActivationType.RELU.name for _ in range(num_hidden_layers)]
+        else:
+            hidden_activation_functions = [actf.name for actf in hidden_activation_functions]  # get name of enums
         self._hidden_activation_functions = hidden_activation_functions
         self._topology = ann_topology
         self._learn_rate = learn_rate

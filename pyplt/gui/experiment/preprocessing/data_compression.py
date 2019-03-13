@@ -41,7 +41,7 @@ class AutoencoderSettings(tk.Frame):
 
         # - output layer variables
         self._output_size = self._input_size
-        self._output_activation_function = tk.StringVar(value=ActivationType.RELU.name)
+        self._output_activation_function = tk.StringVar(value=ActivationType.SIGMOID.name)
 
         # - total / general variables
         self._decoder_labels = dict()
@@ -234,7 +234,7 @@ class AutoencoderSettings(tk.Frame):
         # activation function
         output_activation_fns = self._actf_options + [ActivationType.LINEAR.name]
         o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function,
-                               output_activation_fns[0], *output_activation_fns,
+                               output_activation_fns[1], *output_activation_fns,  # SIGMOID default
                                style='Sub.PL.PLT.TMenubutton')
         o_afn.grid(row=1, column=2)
 

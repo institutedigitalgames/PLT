@@ -44,7 +44,7 @@ class BackpropMenu(tk.Frame):
         self._hidden_activation_functions = dict()
         self._hidden_neurons[0] = tk.IntVar(value=5)
         self._hidden_activation_functions[0] = tk.StringVar(value=ActivationType.RELU.name)
-        self._output_activation_function = tk.StringVar(value=ActivationType.RELU.name)
+        self._output_activation_function = tk.StringVar(value=ActivationType.SIGMOID.name)
         self._learn_rate = tk.DoubleVar(value=0.001)
         self._error_thresh = tk.DoubleVar(value=0.001)
         self._epochs = tk.IntVar(value=10)
@@ -138,8 +138,8 @@ class BackpropMenu(tk.Frame):
 
         # activation function
         options = [ActivationType.RELU.name, ActivationType.SIGMOID.name]
-        o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function, options[0], *options,
-                               style='Sub.PL.PLT.TMenubutton')
+        o_afn = ttk.OptionMenu(ann_output_layer_frame, self._output_activation_function, options[1], *options,
+                               style='Sub.PL.PLT.TMenubutton')  # SIGMOID default
         o_afn.grid(row=1, column=2)
 
         ################

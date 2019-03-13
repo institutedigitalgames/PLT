@@ -59,10 +59,11 @@ class BackpropagationTF(PLAlgorithm):
         :param epochs: the maximum number of iterations the algorithm should make over the entire pairwise rank
             training set (default 10).
         :type epochs: int, optional
-        :param activation_functions: a list of the activation function to be used across the neurons
-            for each layer of the ANN; if None, all layers will use the Rectified Linear Unit (ReLU) function i.e.
-            :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
-        :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
+        :param activation_functions: a list of the activation functions to be used across the neurons
+            for each layer of the ANN (default None); if None, all layers will use the Rectified Linear Unit (ReLU)
+            function i.e. :attr:`pyplt.util.enums.ActivationType.RELU`, except for the output layer
+            which will use the Logistic Sigmoid function i.e. :attr:`pyplt.util.enums.ActivationType.SIGMOID`.
+        :type activation_functions: list of :class:`pyplt.util.enums.ActivationType` or None, optional
         :param batch_size: number of samples per gradient update (default 32).
         :type batch_size: int, optional
         :param debug: specifies whether or not to print notes to console for debugging (default False).
@@ -95,9 +96,13 @@ class BackpropagationTF(PLAlgorithm):
         self._activation_fns = []
         activation_fn_names = []
         if activation_functions is None:
-            for _ in self._ann_topology:  # for each layer
-                self._activation_fns.append(tf.nn.relu)
-                activation_fn_names.append(ActivationType.RELU.name)
+            for layer in range(len(self._ann_topology)):  # for each layer
+                if layer == len(self._ann_topology)-1:  # for output layer, use sigmoid
+                    self._activation_fns.append(tf.nn.sigmoid)
+                    activation_fn_names.append(ActivationType.SIGMOID.name)
+                else:
+                    self._activation_fns.append(tf.nn.relu)  # for all other layers, use relu
+                    activation_fn_names.append(ActivationType.RELU.name)
         else:
             for act_fn in activation_functions:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name

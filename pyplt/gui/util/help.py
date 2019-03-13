@@ -1190,7 +1190,8 @@ class BeginnerStep4HelpDialog(HelpDialog):
                      "(0.001 in the Beginner Mode), training stops before reaching the specified number of epochs, " \
                      "and the current weight values are returned as the final model. In the Beginner Mode, the " \
                      "network topology is set up such that it contains one hidden layer of 5 neurons and uses " \
-                     "the ReLU activation function for each neuron. In PLT, the algorithm was implemented using the "
+                     "the ReLU activation function for each neuron in that layer while the output neuron uses the " \
+                     "Logistic Sigmoid activation function. In PLT, the algorithm was implemented using the "
         bp_text_02 = "tensorflow"  # bold
         bp_text_03 = " library. For more information refer to [4-5].\n\n"
 

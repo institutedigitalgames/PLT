@@ -21,10 +21,12 @@ class Autoencoder:
         :param decoder_topology: specifies the number of neurons in each layer of the decoder part of the network,
             excluding the code layer and the output layer.
         :type decoder_topology: list of int
-        :param activation_functions: a list of the activation function to be used across the neurons
-            for each layer of the ANN (excluding input layer); if None, all layers will use the Rectified Linear Unit
-            (ReLU) function i.e. :attr:`pyplt.plalgorithms.backprop_tf.ActivationType.RELU` (default None).
-        :type activation_functions: list of :class:`pyplt.plalgorithms.backprop_tf.ActivationType` or None, optional
+        :param activation_functions: a list of the activation functions to be used across the neurons
+            for each layer of the ANN (excluding input layer) (default None); if None, all layers will use the
+            Rectified Linear Unit (ReLU) function i.e. :attr:`pyplt.util.enums.ActivationType.RELU`, except for
+            the output layer which will use the Logisitic Sigmoid function i.e.
+            :attr:`pyplt.util.enums.ActivationType.SIGMOID`.
+        :type activation_functions: list of :class:`pyplt.util.enums.ActivationType` or None, optional
         :param learn_rate: the learning rate used in the weight update step of the algorithm (default 0.1).
         :type learn_rate: float, optional
         :param error_threshold: a threshold at or below which the error of a model is considered to be
@@ -63,8 +65,13 @@ class Autoencoder:
         # convert activation function enums to actual tensorflow functions
         # but keep ActivationType names (in activation_fn_names) for more readable printing
         if activation_functions is None:
-            for _ in self._ann_topology:  # for each layer
-                self._activation_fns.append(tf.nn.relu)
+            for layer in range(len(self._ann_topology)):  # for each layer
+                if layer == len(self._ann_topology)-1:  # for output layer, use sigmoid
+                    self._activation_fns.append(tf.nn.sigmoid)
+                    activation_fn_names.append(ActivationType.SIGMOID.name)
+                else:
+                    self._activation_fns.append(tf.nn.relu)
+                    activation_fn_names.append(ActivationType.RELU.name)
         else:
             for act_fn in activation_functions:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name

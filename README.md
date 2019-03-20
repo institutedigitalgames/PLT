@@ -70,6 +70,7 @@ For more a more detailed usage guide, please check out the [tutorial](http://plt
 ## Development Setup
 
 PLT has the following package dependencies:
+* keras
 * ttkthemes
 * numpy
 * matplotlib

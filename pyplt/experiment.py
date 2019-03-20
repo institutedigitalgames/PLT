@@ -601,6 +601,8 @@ class Experiment:
 
             # store autoencoder details
             self._autoencoder_details = {"Autoencoder-Topology": str(self._autoencoder.get_topology_incl_input()),
+                                         "Autoencoder-Activation Functions": [text.real_type_name(str(val)) for
+                                                                              val in self._autoencoder.get_actfs()],
                                          "Autoencoder-Code Size": str(self._autoencoder.get_code_size()),
                                          "Autoencoder-Learning Rate": str(self._autoencoder.get_learn_rate()),
                                          "Autoencoder-Error Threshold": str(self._autoencoder.get_error_thresh()),

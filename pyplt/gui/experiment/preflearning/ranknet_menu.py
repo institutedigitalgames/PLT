@@ -334,7 +334,7 @@ class RankNetMenu(tk.Frame):
         # - the learning rate (default 0.1);
         # - the number of epochs (default 100);
         # - a dict specifying the name of the activation function type used for each hidden layer
-        # (default {0: ActivationType.RELU.name});
+        # (default {0: ActivationType.RELU});
         # - the batch size (number of samples per gradient update) (default 32).
 
         # get values of dicts
@@ -344,13 +344,13 @@ class RankNetMenu(tk.Frame):
 
         _hidden_activation_functions = dict()
         for h_a in self._hidden_activation_functions:
-            _hidden_activation_functions[h_a] = self._hidden_activation_functions[h_a].get()
+            _hidden_activation_functions[h_a] = ActivationType[self._hidden_activation_functions[h_a].get()]
 
         if self._num_hidden_layers == 0:
             ann_topology = None
         else:
             ann_topology = list(_hidden_neurons.values()) + [1]  # (1 = output layer)
-        activation_fns = list(_hidden_activation_functions.values()) + [self._output_activation_function.get()]
+        activation_fns = list(_hidden_activation_functions.values())
 
         print("topology: " + str(ann_topology))
         print("activation_fns: " + str(activation_fns))
@@ -360,7 +360,7 @@ class RankNetMenu(tk.Frame):
         # learn_rate - the learning rate (default 0.1)
         # epochs - the number of epochs (default 100)
         # hidden_activation_functions - the activation functions for each hidden layer in the network
-        # ^ (default [ActivationType.RELU.name, ActivationType.RELU.name])
+        # ^ (default [ActivationType.RELU])
         # batch_size - the number of samples per gradient update (default 32)
 
         params_dict = {'ann_topology': ann_topology,

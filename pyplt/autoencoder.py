@@ -299,9 +299,8 @@ class Autoencoder:
         :param samples: the samples to be input into the autoencoder.
         :type samples: array-like of shape n_samples x n_features
         :return: the autoencoder output for the given input samples.
-        :rtype:
+        :rtype: array-like of shape n_samples x n_features
         """
-        # TODO: [AUTOENCODER] add docstring
         with self._graph.as_default():
             sess = self._session
 
@@ -316,7 +315,8 @@ class Autoencoder:
     def encode(self, samples, progress_window=None, exec_stopper=None):
         """Encode the given samples by running the given samples through the encoder part of the network.
 
-        :param samples:
+        :param samples: the samples to be input into the autoencoder.
+        :type samples: array-like of shape n_samples x n_features
         :param progress_window: a GUI object (extending the `tkinter.Toplevel` widget) used to display a
             progress log and progress bar during the experiment execution (default None).
         :type progress_window: :class:`pyplt.gui.experiment.progresswindow.ProgressWindow`, optional
@@ -326,9 +326,8 @@ class Autoencoder:
         :return:
             * the encoded sample -- if execution is completed successfully.
             * None -- if experiment is aborted before completion by `exec_stopper`.
+        :rtype: array-like of shape n_samples x code_size
         """
-        # TODO: [AUTOENCODER] add docstring
-
         if progress_window is not None:
             progress_window.put("Encoding dataset.")
 

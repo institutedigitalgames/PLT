@@ -60,28 +60,29 @@ class Autoencoder:
 
         # activation functions
         self._activation_fns = []
-        activation_fn_names = []
+        self._activation_fn_names = []
 
         # convert activation function enums to actual tensorflow functions
-        # but keep ActivationType names (in activation_fn_names) for more readable printing
+        # but keep ActivationType names (in self._activation_fn_names) for more readable printing
         if activation_functions is None:
             for layer in range(len(self._ann_topology)):  # for each layer
                 if layer == len(self._ann_topology)-1:  # for output layer, use sigmoid
                     self._activation_fns.append(tf.nn.sigmoid)
-                    activation_fn_names.append(ActivationType.SIGMOID.name)
+                    self._activation_fn_names.append(ActivationType.SIGMOID.name)
                 else:
                     self._activation_fns.append(tf.nn.relu)
-                    activation_fn_names.append(ActivationType.RELU.name)
+                    self._activation_fn_names.append(ActivationType.RELU.name)
         else:
             for act_fn in activation_functions:
                 if (act_fn == ActivationType.SIGMOID) or (act_fn == ActivationType.SIGMOID.name):  # enum or enum name
                     self._activation_fns.append(tf.nn.sigmoid)
-                    activation_fn_names.append(ActivationType.SIGMOID.name)
+                    self._activation_fn_names.append(ActivationType.SIGMOID.name)
                 elif (act_fn == ActivationType.RELU) or (act_fn == ActivationType.RELU.name):
                     self._activation_fns.append(tf.nn.relu)
-                    activation_fn_names.append(ActivationType.RELU.name)
+                    self._activation_fn_names.append(ActivationType.RELU.name)
                 elif (act_fn == ActivationType.LINEAR) or (act_fn == ActivationType.LINEAR.name):
                     self._activation_fns.append(None)
+                    self._activation_fn_names.append(ActivationType.LINEAR.name)
                 # TODO: do same for new activation functions
 
         print("AUTOENCODER activation functions:")
@@ -375,6 +376,14 @@ class Autoencoder:
         :rtype: list of int
         """
         return [self._num_inputs] + self._ann_topology
+
+    def get_actfs(self):
+        """Get the names of the activation functions of each layer in the network.
+
+        :return: the names of the activation functions of each layer.
+        :rtype: list of str
+        """
+        return self._activation_fn_names
 
     def get_learn_rate(self):
         """Get the value of the learning rate parameter.

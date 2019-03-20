@@ -75,32 +75,47 @@ class WrapperFSMethod(FeatureSelectionMethod):
             if preprocessed_folds.is_training_only():  # train only
                 for train_objects, train_ranks, test_objects, test_ranks in preprocessed_folds.next_fold():
                     # first train the model using the specified algorithm
-                    algorithm.train(train_objects, train_ranks, use_feats=feature_set,
-                                    progress_window=progress_window, exec_stopper=exec_stopper)
+                    success = algorithm.train(train_objects, train_ranks, use_feats=feature_set,
+                                              progress_window=progress_window, exec_stopper=exec_stopper)
+                    if success is None:  # check if execution was aborted!
+                        print("Aborting feature selection execution...")
+                        return
                     # no evaluation; training only
                     print("no eval")
                     # calculate & return training accuracy
                     train_acc = algorithm.calc_train_accuracy(train_objects, train_ranks, use_feats=feature_set,
                                                               progress_window=progress_window,
                                                               exec_stopper=exec_stopper)
+                    if train_acc is None:  # check if execution was aborted!
+                        print("Aborting feature selection execution...")
+                        return
                     tot_accuracy = tot_accuracy + train_acc
             else:  # train & test
                 for train_objects, train_ranks, test_objects, test_ranks in preprocessed_folds.next_fold():
                     # first train the model using the specified algorithm
-                    algorithm.train(train_objects, train_ranks, use_feats=feature_set,
-                                    progress_window=progress_window, exec_stopper=exec_stopper)
+                    success = algorithm.train(train_objects, train_ranks, use_feats=feature_set,
+                                              progress_window=progress_window, exec_stopper=exec_stopper)
+                    if success is None:  # check if execution was aborted!
+                        print("Aborting feature selection execution...")
+                        return
                     # test data specified; train & evaluate
                     print("eval")
                     # calculate & return test accuracy
                     test_acc = algorithm.test(test_objects, test_ranks, use_feats=feature_set,
                                               progress_window=progress_window, exec_stopper=exec_stopper)
+                    if test_acc is None:  # check if execution was aborted!
+                        print("Aborting feature selection execution...")
+                        return
                     tot_accuracy = tot_accuracy + test_acc
             avg_accuracy = tot_accuracy / float(preprocessed_folds.get_n_folds())
             return avg_accuracy
         else:  # i.e. we have normal data
             # first train the model using the specified algorithm
-            algorithm.train(objects, ranks, use_feats=feature_set,
-                            progress_window=progress_window, exec_stopper=exec_stopper)
+            success = algorithm.train(objects, ranks, use_feats=feature_set,
+                                      progress_window=progress_window, exec_stopper=exec_stopper)
+            if success is None:  # check if execution was aborted!
+                print("Aborting feature selection execution...")
+                return
             # then see whether to test/evaluate or not
             if test_objects is None or test_ranks is None:
                 # no evaluation; training only
@@ -112,6 +127,10 @@ class WrapperFSMethod(FeatureSelectionMethod):
                 # test data specified; train & evaluate
                 print("eval")
                 # calculate & return test accuracy
-                _, test_acc = algorithm.test(test_objects, test_ranks, use_feats=feature_set,
-                                             progress_window=progress_window, exec_stopper=exec_stopper)
+                result = algorithm.test(test_objects, test_ranks, use_feats=feature_set,
+                                        progress_window=progress_window, exec_stopper=exec_stopper)
+                if result is None:  # check if execution was aborted!
+                    print("Aborting feature selection execution...")
+                    return
+                _, test_acc = result
                 return test_acc

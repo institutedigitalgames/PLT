@@ -648,8 +648,12 @@ class Experiment:
 
         # D1b. split folds for PL
         if isinstance(self._pl_eval, KFoldCrossValidation) or isinstance(self._pl_eval, HoldOut):
-            if fs_folds_ready:  # copy folds from FS
-                pl_folds = fs_folds
+            if fs_folds_ready and ((isinstance(self._pl_eval, KFoldCrossValidation) and
+                                    isinstance(self._fs_eval, KFoldCrossValidation)) or
+                                   (isinstance(self._pl_eval, HoldOut) and isinstance(self._fs_eval, HoldOut))):
+                    # if the same evaluation method is used in BOTH FS and PL, copy folds from FS
+                    print("Using same folds from FS for PL...")
+                    pl_folds = fs_folds
             else:  # create folds for PL only
                 pl_folds = self._pl_eval.split(data)
                 if isinstance(self._pl_eval, HoldOut):
@@ -703,7 +707,11 @@ class Experiment:
 
         # get the actual data for every fold
         fs_folds_data = PreprocessedFolds([self._apply_pre_processing(train, test) for train, test in fs_folds])
-        if fs_folds_ready:
+        if fs_folds_ready and ((isinstance(self._pl_eval, KFoldCrossValidation) and
+                                isinstance(self._fs_eval, KFoldCrossValidation)) or
+                               (isinstance(self._pl_eval, HoldOut) and isinstance(self._fs_eval, HoldOut))):
+            # if the same evaluation method is used in BOTH FS and PL, copy folds from FS
+            print("Using same folds data from FS for PL...")
             pl_folds_data = fs_folds_data
         else:
             pl_folds_data = PreprocessedFolds([self._apply_pre_processing(train, test) for train, test in pl_folds])

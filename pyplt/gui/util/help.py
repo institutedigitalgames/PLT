@@ -514,9 +514,11 @@ class FSHelpDialog(HelpDialog):
                       "that subset of features as input. All of the preference learning algorithms implemented " \
                       "in the tool can be used to train this model; i.e., "
         sfs_text_02 = "RankSVM"  # bold
-        sfs_text_03 = " and "
+        sfs_text_03 = ", "
         sfs_text_04 = "Backpropagation"  # bold
-        sfs_text_05 = " (see Preference Learning tab Help dialog for more detail on each algorithm). Furthermore, " \
+        sfs_text_05 = " and "
+        sfs_text_06 = "RankNet"  # bold
+        sfs_text_07 = " (see Preference Learning tab Help dialog for more detail on each algorithm). Furthermore, " \
                       "you can choose to either train the model using the complete dataset (no validation) " \
                       "and therefore assessing the performance as the percentage of correctly classified " \
                       "training pairs or can test the generality of the results by using one of the " \
@@ -561,6 +563,8 @@ class FSHelpDialog(HelpDialog):
         text_area.insert(tk.END, sfs_text_03)
         text_area.insert(tk.END, sfs_text_04, "bold")
         text_area.insert(tk.END, sfs_text_05)
+        text_area.insert(tk.END, sfs_text_06, "bold")
+        text_area.insert(tk.END, sfs_text_07)
         text_area.insert(tk.END, holdout_heading, "bold")
         text_area.insert(tk.END, holdout_text_01)
         text_area.insert(tk.END, kfcv_heading, "bold")
@@ -648,6 +652,19 @@ class PLHelpDialog(HelpDialog):
         bp_text_02 = "tensorflow"  # bold
         bp_text_03 = " library. For more information refer to [4-5].\n\n"
 
+        rn_heading2 = "> RankNet\n"
+        rn_text_01 = "The RankNet algorithm is an extension of the Backpropagation algorithm which uses a " \
+                     "probabilistic cost function to handle ordered pairs of data. As in Backpropagation, the " \
+                     "algorithm iteratively (over a given number of epochs) optimizes the error function by " \
+                     "adjusting the weights of an artificial neural network (ANN) model proportionally to the " \
+                     "gradient of the error with respect to the current value of the weights and current data " \
+                     "samples. The error function used is the binary cross-entropy function. The proportion and " \
+                     "therefore the strength of each update is regulated by the given learning rate. The total " \
+                     "error is averaged over the complete set of pairs in the training set. In PLT, the algorithm " \
+                     "was implemented using the "
+        rn_text_02 = "keras"
+        rn_text_03 = " library. For more information refer to [6-7].\n\n"
+
         eval_heading = "Evaluation\n"  # heading
         eval_text_01 = "You can choose to either train the model using the complete dataset (no validation) " \
                        "and therefore assessing the performance as the percentage of correctly classified " \
@@ -703,7 +720,10 @@ class PLHelpDialog(HelpDialog):
                     "[3] scikit-learn Machine Learning in Python. Available: http://scikit-learn.org/.\n" \
                     "[4] H. P. Martinez, Y. Bengio and G. N. Yannakakis, \"Learning deep physiological models " \
                     "of affect,\" IEEE Computational Intelligence Magazine, vol. 8, (2), pp. 20-33, 2013.\n" \
-                    "[5] TensorFlow. Available: https://www.tensorflow.org/."
+                    "[5] TensorFlow. Available: https://www.tensorflow.org/.\n" \
+                    "[6] C. Burges et al, \"Learning to rank using gradient descent,\" in Proceedings of the 22Nd " \
+                    "International Conference on Machine Learning, New York, NY, USA, 2005, pp. 89-90-96.\n" \
+                    "[7] Keras: The Python Deep Learning library. Available: https://keras.io/."
 
         text_area.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
@@ -718,6 +738,10 @@ class PLHelpDialog(HelpDialog):
         text_area.insert(tk.END, bp_text_01)
         text_area.insert(tk.END, bp_text_02, "bold")
         text_area.insert(tk.END, bp_text_03)
+        text_area.insert(tk.END, rn_heading2, "heading2")
+        text_area.insert(tk.END, rn_text_01)
+        text_area.insert(tk.END, rn_text_02, "bold")
+        text_area.insert(tk.END, rn_text_03)
         text_area.insert(tk.END, eval_heading, "heading")
         text_area.insert(tk.END, eval_text_01)
         text_area.insert(tk.END, holdout_heading, "bold")
@@ -805,8 +829,8 @@ class ResultsHelpDialog(HelpDialog):
                              "refers to the non-preferred object in the pair.\n\nFor "
         save_model_text_06 = "Artificial Neural Network models"  # bold
         save_model_text_07 = " (inferred via the "
-        save_model_text_08 = "Backpropagation"  # bold
-        save_model_text_09 = " algorithm), the weights of the network are stored as follows:\n" \
+        save_model_text_08 = "Backpropagation or RankNet"  # bold
+        save_model_text_09 = " algorithms), the weights of the network are stored as follows:\n" \
                              "> The ‘Layer’ column stores the name of the layer (the letter ‘h’ signifies a hidden " \
                              "layer).\n" \
                              "> The ‘Neuron’ column stores the index of the neuron in the given layer.\n" \
@@ -1195,6 +1219,19 @@ class BeginnerStep4HelpDialog(HelpDialog):
         bp_text_02 = "tensorflow"  # bold
         bp_text_03 = " library. For more information refer to [4-5].\n\n"
 
+        rn_heading2 = "> RankNet\n"
+        rn_text_01 = "The RankNet algorithm is an extension of the Backpropagation algorithm which uses a " \
+                     "probabilistic cost function to handle ordered pairs of data. As in Backpropagation, the " \
+                     "algorithm iteratively (over a given number of epochs) optimizes the error function by " \
+                     "adjusting the weights of an artificial neural network (ANN) model proportionally to the " \
+                     "gradient of the error with respect to the current value of the weights and current data " \
+                     "samples. The error function used is the binary cross-entropy function. The proportion and " \
+                     "therefore the strength of each update is regulated by the given learning rate. The total " \
+                     "error is averaged over the complete set of pairs in the training set. In PLT, the algorithm " \
+                     "was implemented using the "
+        rn_text_02 = "keras"
+        rn_text_03 = " library. For more information refer to [6-7].\n\n"
+
         eval_heading = "Evaluation\n"  # heading
         eval_text_01 = "The generality of the results is tested by using "
         eval_text_02 = "Holdout"
@@ -1213,7 +1250,10 @@ class BeginnerStep4HelpDialog(HelpDialog):
                     "[3] scikit-learn Machine Learning in Python. Available: http://scikit-learn.org/.\n" \
                     "[4] H. P. Martinez, Y. Bengio and G. N. Yannakakis, \"Learning deep physiological models " \
                     "of affect,\" IEEE Computational Intelligence Magazine, vol. 8, (2), pp. 20-33, 2013.\n" \
-                    "[5] TensorFlow. Available: https://www.tensorflow.org/."
+                    "[5] TensorFlow. Available: https://www.tensorflow.org/.\n" \
+                    "[6] C. Burges et al, \"Learning to rank using gradient descent,\" in Proceedings of the 22Nd " \
+                    "International Conference on Machine Learning, New York, NY, USA, 2005, pp. 89-90-96.\n" \
+                    "[7] Keras: The Python Deep Learning library. Available: https://keras.io/."
 
         text_area.pack(expand=True, fill=tk.BOTH, padx=20, pady=20)
 
@@ -1228,6 +1268,10 @@ class BeginnerStep4HelpDialog(HelpDialog):
         text_area.insert(tk.END, bp_text_01)
         text_area.insert(tk.END, bp_text_02, "bold")
         text_area.insert(tk.END, bp_text_03)
+        text_area.insert(tk.END, rn_heading2, "heading2")
+        text_area.insert(tk.END, rn_text_01)
+        text_area.insert(tk.END, rn_text_02, "bold")
+        text_area.insert(tk.END, rn_text_03)
         text_area.insert(tk.END, eval_heading, "heading")
         text_area.insert(tk.END, eval_text_01)
         text_area.insert(tk.END, eval_text_02, "bold")

@@ -251,7 +251,7 @@ class Autoencoder:
                     return
 
                 # for tensorboard
-                writer = tf.summary.FileWriter("tensorboard-output", sess.graph)
+                # writer = tf.summary.FileWriter("tensorboard-output", sess.graph)
 
                 # sess.run(self._optimiser, feed_dict={self._X: self._training_examples})
                 # train_loss = self._loss.eval(feed_dict={self._X: self._training_examples}, session=sess)
@@ -274,7 +274,7 @@ class Autoencoder:
                 train_loss = self._loss.eval(feed_dict={self._X: self._training_examples}, session=sess)
 
                 # for tensorboard
-                writer.close()
+                # writer.close()
 
                 if train_loss <= self._error_threshold:
                     print("Reached loss below or equal to error threshold. Training terminated.")

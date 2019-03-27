@@ -122,7 +122,8 @@ class ResultsWindow(tk.Toplevel):
         obj_path, ranks_path, single_path = data_info[2]
         f_include = preproc_info[0]  # dict
         f_norm = preproc_info[1]  # dict
-        n_feats = len(f_include)  # no need for -1 as ID column not included
+        n_feats = len([f for f in f_include if f_include[f].get()])  # no need for -1 as ID column not included
+        # ^ only if True i.e. ignore excluded features!!!
         fs_method = fs_info[0]
         fs_method_params = fs_info[1]
         sel_feats = fs_info[2]
@@ -188,7 +189,7 @@ class ResultsWindow(tk.Toplevel):
         data_other_sub_frame.pack()
         tk.Label(data_other_sub_frame, text="Number of objects/samples:").grid(row=0, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_obj)).grid(row=0, column=1, sticky='e')
-        tk.Label(data_other_sub_frame, text="Number of original/extracted features:").grid(row=1, column=0, sticky='w')
+        tk.Label(data_other_sub_frame, text="Number of included/extracted features:").grid(row=1, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_feats)).grid(row=1, column=1, sticky='e')
         tk.Label(data_other_sub_frame, text="Number of ranks/preferences:").grid(row=2, column=0, sticky='w')
         tk.Label(data_other_sub_frame, text=str(n_ranks)).grid(row=2, column=1, sticky='e')
@@ -237,12 +238,12 @@ class ResultsWindow(tk.Toplevel):
         r = 0
         tk.Label(pf, text="Feature", font='Ebrima 11 normal').grid(row=r, column=0, sticky='w', padx=(0, 5))
         tk.Label(pf, text="Normalization", font='Ebrima 11 normal').grid(row=r, column=1, padx=(5, 0))
-        for f in f_include:
+        for f in range(len(orig_feats)):
             r += 1
             # no need to skip first row as ID is excluded in f_include and f_norm
-            if f_include[f].get():  # only if feature included (==True)
-                tk.Label(pf, text=str(orig_feats[f])).grid(row=r, column=0, sticky='w')
-                tk.Label(pf, text=text.real_type_name(str(f_norm[f].get()))).grid(row=r, column=1)
+            # no need to check if feature included (==True) as orig_feats and f_norm only contain included features!
+            tk.Label(pf, text=str(orig_feats[f])).grid(row=r, column=0, sticky='w')
+            tk.Label(pf, text=text.real_type_name(str(f_norm[f]))).grid(row=r, column=1)
 
         ttk.Separator(preproc_frame, orient=tk.HORIZONTAL).pack(fill=tk.BOTH, expand=True, pady=5)
 
@@ -390,13 +391,7 @@ class ResultsWindow(tk.Toplevel):
             r += 1
 
         # Send additional data to Experiment for log saving
-        f_norm_clean = dict()
-        fi = 0
-        for f in f_norm:
-            # no need to ignore 0 since ID column is not included
-            f_norm_clean[f] = f_norm[f].get()  # get StringVar value
-            fi += 1
-        self._exp._set_file_meta_data(obj_path, ranks_path, single_path, f_norm_clean)
+        self._exp._set_file_meta_data(obj_path, ranks_path, single_path, f_norm)
 
         # Buttons to save model and/or save experiment log
         self._model_img = tk.PhotoImage(file=os.path.join(ROOT_PATH, "assets/buttons/save_model_128_30_01_white.png"))

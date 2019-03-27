@@ -164,6 +164,7 @@ class PLFrame(tk.Frame):
         self._algorithm_sub_menus = {}
         self._evaluator_name = tk.StringVar(value=EvaluatorType.NONE.name)
         self._evaluator_sub_menus = {}
+        self._real_norm_settings = None
 
         self._OS = platform.system()
 
@@ -431,9 +432,10 @@ class PLFrame(tk.Frame):
 
         # +1 each feat ID and add a 0 to use_feats to make up for ID column which hasn't yet been removed
         # no need if autoencoder is enabled bc use_feats are only used for input size
+        real_use_feats = use_feats.copy()
         if not auto_extract_enabled:
             new_use_feats = [f+1 for f in use_feats]
-            use_feats = [0] + new_use_feats
+            real_use_feats = [0] + new_use_feats
 
         # Get actual objects and set up Experiment variables
         exp = Experiment()
@@ -442,22 +444,22 @@ class PLFrame(tk.Frame):
             if auto_extract_enabled:
                 # N.B. ignore use_feats if autoencoder is enabled bc we need all original features
                 # use only for input size
-                use_feats = list(_objects.columns)[:-1]  # exclude last column to account for ID column
+                real_use_feats = list(_objects.columns)[:-1]  # exclude last column to account for ID column
             else:
-                _objects = _objects.iloc[:, use_feats]  # include/exclude features
+                _objects = _objects.iloc[:, real_use_feats]  # include/exclude features
                 # ^ ID col still included bc we took care of it above
             exp._set_objects(_objects, has_ids=True)
             # ^ has_ids=True bc _load_data() adds ID column if there isn't already
             exp._set_ranks(_ranks, has_ids=True)  # has_ids=True bc _load_data() adds ID column if there isn't already
         else:
             last_col_id = len(data.columns)-1
-            use_feats.append(last_col_id)  # include last column (ratings)
+            real_use_feats.append(last_col_id)  # include last column (ratings)
             if auto_extract_enabled:
                 # N.B. ignore use_feats if autoencoder is enabled bc we need all original features
                 # use only for input size
-                use_feats = list(data.columns)[:-2]  # exclude last 2 columns to account for ID column and ratings col
+                real_use_feats = list(data.columns)[:-2]  # exclude last 2 columns to account for ID column and ratings col
             else:
-                data = data.iloc[:, use_feats]  # include/exclude features
+                data = data.iloc[:, real_use_feats]  # include/exclude features
                 # ^ ID col still included bc we took care of it above
             exp._set_single_data(data, has_ids=True)
             # ^ has_ids=True bc _load_data() adds ID column if there isn't already
@@ -466,7 +468,7 @@ class PLFrame(tk.Frame):
         if auto_extract_enabled:
             # set autoencoder
             ae_menu = self._preproc_tab.get_autoencoder_menu()
-            input_size = len(use_feats)
+            input_size = len(real_use_feats)
             code_size = ae_menu.get_code_size()
             code_actf = ae_menu.get_code_actf()
             encoder_top = ae_menu.get_encoder_neurons()
@@ -483,7 +485,14 @@ class PLFrame(tk.Frame):
 
         # set normalization methods (but first convert to dict of NormalizationType-names values
         # rather than StringVar-of-NormalizationType-names values)
-        feat_norm_settings = {key: val.get() for key, val in feat_norm_settings.items()}
+        feat_norm_settings = {key: val.get() for key, val in feat_norm_settings.items() if key in use_feats}
+        # ^ remove excluded features from norm_settings (i.e. get only those in use_feats i.e. included)!
+        # also fix feature ids (keys) in norm_settings to account for removed/excluded features!
+        excl_feats = [key for key, val in feat_include_settings.items() if not val.get()]  # if val.get() is False
+        feat_norm_settings = {(key - len([f for f in excl_feats if f < key])): val
+                              for key, val in feat_norm_settings.items()}
+        self._real_norm_settings = feat_norm_settings
+        # set in experiment
         exp._set_norm_settings(feat_norm_settings)
 
         if not (fs_method == FSMethod.NONE):
@@ -803,7 +812,7 @@ class PLFrame(tk.Frame):
         sel_feats = exp.get_features()
 
         preproc_info = [self._preproc_tab.get_include_settings(),
-                        self._preproc_tab.get_norm_settings()]
+                        self._real_norm_settings]
 
         pw.put("DONE")
 

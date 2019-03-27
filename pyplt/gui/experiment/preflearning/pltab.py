@@ -483,15 +483,16 @@ class PLFrame(tk.Frame):
             ae = Autoencoder(input_size, code_size, encoder_top, decoder_top, activation_functions, lr, error_thresh, e)
             exp.set_autoencoder(ae)
 
-        # set normalization methods (but first convert to dict of NormalizationType-names values
-        # rather than StringVar-of-NormalizationType-names values)
-        feat_norm_settings = {key: val.get() for key, val in feat_norm_settings.items() if key in use_feats}
+        # set normalization methods
+        feat_norm_settings = {key: val for key, val in feat_norm_settings.items() if key in use_feats}
         # ^ remove excluded features from norm_settings (i.e. get only those in use_feats i.e. included)!
         # also fix feature ids (keys) in norm_settings to account for removed/excluded features!
         excl_feats = [key for key, val in feat_include_settings.items() if not val.get()]  # if val.get() is False
         feat_norm_settings = {(key - len([f for f in excl_feats if f < key])): val
                               for key, val in feat_norm_settings.items()}
-        self._real_norm_settings = feat_norm_settings
+        self._real_norm_settings = feat_norm_settings.copy()
+        # convert to dict of NormalizationType-names values rather than StringVar-of-NormalizationType-names values
+        feat_norm_settings = {key: val.get() for key, val in feat_norm_settings.items()}
         # set in experiment
         exp._set_norm_settings(feat_norm_settings)
 

@@ -243,7 +243,7 @@ class ResultsWindow(tk.Toplevel):
             # no need to skip first row as ID is excluded in f_include and f_norm
             # no need to check if feature included (==True) as orig_feats and f_norm only contain included features!
             tk.Label(pf, text=str(orig_feats[f])).grid(row=r, column=0, sticky='w')
-            tk.Label(pf, text=text.real_type_name(str(f_norm[f]))).grid(row=r, column=1)
+            tk.Label(pf, text=text.real_type_name(str(f_norm[f].get()))).grid(row=r, column=1)
 
         ttk.Separator(preproc_frame, orient=tk.HORIZONTAL).pack(fill=tk.BOTH, expand=True, pady=5)
 
@@ -391,7 +391,8 @@ class ResultsWindow(tk.Toplevel):
             r += 1
 
         # Send additional data to Experiment for log saving
-        self._exp._set_file_meta_data(obj_path, ranks_path, single_path, f_norm)
+        f_norm_clean = {key: val.get() for key, val in f_norm.items()}
+        self._exp._set_file_meta_data(obj_path, ranks_path, single_path, f_norm_clean)
 
         # Buttons to save model and/or save experiment log
         self._model_img = tk.PhotoImage(file=os.path.join(ROOT_PATH, "assets/buttons/save_model_128_30_01_white.png"))

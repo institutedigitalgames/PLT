@@ -28,6 +28,14 @@ pyplt.gui.experiment.preflearning.pltab module
     :undoc-members:
     :show-inheritance:
 
+pyplt.gui.experiment.preflearning.ranknet\_menu module
+------------------------------------------------------
+
+.. automodule:: pyplt.gui.experiment.preflearning.ranknet_menu
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyplt.gui.experiment.preflearning.ranksvm\_menu module
 ------------------------------------------------------
 

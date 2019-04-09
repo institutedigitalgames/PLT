@@ -20,6 +20,14 @@ pyplt.plalgorithms.base module
     :undoc-members:
     :show-inheritance:
 
+pyplt.plalgorithms.ranknet module
+---------------------------------
+
+.. automodule:: pyplt.plalgorithms.ranknet
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyplt.plalgorithms.ranksvc module
 ---------------------------------
 

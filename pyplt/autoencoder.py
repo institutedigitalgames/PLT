@@ -412,7 +412,7 @@ class Autoencoder:
         """Close the `tensorflow` session once the algorithm class instance is no longer needed.
 
         V.IMP. THIS FUNCTION MUST BE CALLED WHEN THE CLASS INSTANCE IS NO LONGER IN USE unless a context manager
-        is used around the BackpropagationTF class instance!!!
+        is used around the Autoencoder class instance!!!
         """
         # v.imp to close tf.Session whether manually or via context manager (see documentation)!!
         if self._session is not None:

@@ -32,6 +32,14 @@ Subpackages
 Submodules
 ----------
 
+pyplt.autoencoder module
+------------------------
+
+.. automodule:: pyplt.autoencoder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyplt.exceptions module
 -----------------------
 

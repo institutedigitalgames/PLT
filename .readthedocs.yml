@@ -22,5 +22,5 @@ python:
   version: 3.6
   install:
     - requirements: requirements.txt
-    - method: setuptools
+
   system_packages: true

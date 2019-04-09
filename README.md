@@ -19,9 +19,9 @@ PLT may be used either via its GUI or its API. This ``README`` is based on the A
 The API documentation may be found at: [https://plt.readthedocs.io/](https://plt.readthedocs.io/en/latest/).
 
 ## Features:
-* Dataset Pre-processing
+* Dataset Pre-processing (including automatic feature extraction)
 * Automatic Feature Selection (SFS)
-* Preference Learning Algorithms (RankSVM, ANN-Backpropagation)
+* Preference Learning Algorithms (RankSVM, ANN-Backpropagation, RankNet)
 * Experiment Reporting and Model Storage
 
 ## Installation:

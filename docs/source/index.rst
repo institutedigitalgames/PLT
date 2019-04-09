@@ -19,9 +19,9 @@ learning methods.
 
 PLT Features:
 -------------
-* Dataset Pre-processing
+* Dataset Pre-processing (including automatic feature extraction)
 * Automatic Feature Selection (SFS)
-* Preference Learning Algorithms (RankSVM, ANN-Backpropagation)
+* Preference Learning Algorithms (RankSVM, ANN-Backpropagation, RankNet)
 * Experiment Reporting and Model Storage
 
 Contents:

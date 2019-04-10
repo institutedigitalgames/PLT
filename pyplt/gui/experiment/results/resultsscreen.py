@@ -453,7 +453,9 @@ class ResultsWindow(tk.Toplevel):
 
     def _save_model(self, timestamp):
         if self._tree is None:  # only one or two folds so only one model to save
-            success = self._algo.save_model_with_dialog(timestamp, self)
+            fold = 1  # get the model from the first (and only) fold
+            model = self._fold_metrics[int(fold) - 1][3]  # i.e. the algo_copy of the given row in fold_metrics
+            success = self._save_model_dialog(model, timestamp, self)
             if success:
                 # show info box confirmation
                 messagebox.showinfo("Model successfully saved", "The model was successfully saved!", parent=self)

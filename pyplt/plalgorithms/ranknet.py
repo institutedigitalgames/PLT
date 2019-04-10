@@ -102,7 +102,7 @@ class RankNet(PLAlgorithm):
                "complete set of pairs in the training set. In PLT, the algorithm was implemented using the " \
                "`keras` library."
 
-        super().__init__(description=desc, debug=debug, name=PLAlgo.BACKPROPAGATION.name,
+        super().__init__(description=desc, debug=debug, name=PLAlgo.RANKNET.name,
                          ann_topology=self._topology, hidden_activation_functions=self._hidden_activation_functions,
                          learn_rate=self._learn_rate, epochs=self._epochs)
 

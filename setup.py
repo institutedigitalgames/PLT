@@ -31,7 +31,7 @@ setup(
                       'numpy==1.14.2',
                       'matplotlib==2.2.2',
                       'pandas==0.22.0',
-                      'tensorflow==1.7.0',
+                      'tensorflow==1.12.2',
                       'scikit_learn==0.19.1',
                       'scipy==1.0.1'],
 
